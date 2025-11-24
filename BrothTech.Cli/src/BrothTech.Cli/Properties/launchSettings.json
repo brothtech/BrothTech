@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BrothTech.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "domain add BuildTools"
+    }
+  }
+}
