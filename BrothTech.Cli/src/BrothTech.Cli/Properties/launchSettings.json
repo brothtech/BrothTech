@@ -2,7 +2,7 @@
   "profiles": {
     "BrothTech.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "domain add BuildTools"
+      "commandLineArgs": "domain add TestDomain -t ClassLib"
     }
   }
 }

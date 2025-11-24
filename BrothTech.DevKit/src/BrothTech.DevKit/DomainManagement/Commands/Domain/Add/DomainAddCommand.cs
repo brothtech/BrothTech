@@ -1,4 +1,5 @@
-﻿using System.CommandLine;
+﻿using BrothTech.DevKit.Infrastructure.DotNet;
+using System.CommandLine;
 
 namespace BrothTech.DevKit.DomainManagement.Commands.Domain.Add;
 
@@ -10,10 +11,10 @@ public class DomainAddCommand :
     {
         Aliases.Add("add");
         Add(Name);
-        Add(Type);
+        Add(PrimaryProjectType);
     }
 
-    public new Argument<string> Name { get; } = new(nameof(Name).ToLower());
+    public new Argument<string> Name { get; } = new(nameof(Name));
 
-    public Option<DomainType> Type { get; } = new(nameof(Type).ToLower(), "t", "type");
+    public Option<DotNetProjectTemplate> PrimaryProjectType { get; } = new(nameof(PrimaryProjectType), "-t", "--type");
 }

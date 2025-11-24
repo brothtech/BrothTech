@@ -6,7 +6,7 @@ using System.CommandLine;
 
 namespace BrothTech.Cli;
 
-[ServiceDescriptor<ICommandBuilder, RootCommandBuilder>]
+[ServiceDescriptor<RootCommandBuilder>]
 public class RootCommandBuilder(
     ILogger<RootCommandBuilder> logger,
     IEnumerable<ICommandHandler<RootCommand>> handlers,

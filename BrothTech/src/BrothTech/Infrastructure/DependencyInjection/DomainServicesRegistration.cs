@@ -12,9 +12,23 @@ public abstract class DomainServicesRegistration
         ILoggerFactory loggerFactory,
         IServiceCollection serviceCollection)
     {
-        var logger = loggerFactory.CreateLogger(GetType());
-        foreach (var serviceType in GetServiceTypes())
-            RegisterService(serviceCollection, logger, serviceType);
+        ILogger? logger = null;
+        try
+        {
+            logger = loggerFactory.CreateLogger(GetType());
+            foreach (var serviceType in GetServiceTypes())
+                RegisterService(serviceCollection, logger, serviceType);
+
+            RegisterAdditionalServices(serviceCollection);
+        }
+        catch (Exception exception)
+        {
+            if (logger?.IsEnabled(LogLevel.Error) is true)
+                logger.LogError(
+                    exception: exception,
+                    message: "An error occurred registering services in {registration}.",
+                    GetType().Name);
+        }
     }
 
     private void RegisterService(
@@ -54,4 +68,9 @@ public abstract class DomainServicesRegistration
 
     protected abstract bool ShouldRegisterService(
         Type type);
+
+    protected virtual void RegisterAdditionalServices(
+        IServiceCollection serviceCollection)
+    {
+    }
 }
