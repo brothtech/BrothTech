@@ -8,7 +8,78 @@ public class Result<TItem> :
     public new TItem? Item
     {
         get => (TItem?)base.Item;
-        set => base.Item = value;   
+        init => base.Item = value;   
+    }
+
+    public Result<T> ToResult<T>(
+        Func<TItem, T> func)
+    {
+        if (IsSuccessful && Item is not null)
+            return func(Item);
+
+        return ErrorResult.FromMessages([.. Messages]);
+    }
+
+    public bool HasSucceeded(
+        out TItem? item)
+    {
+        item = Item;
+        return IsSuccessful;
+    }
+
+    public bool HasSucceeded(
+        out TItem? item,
+        out IReadOnlyList<ResultMessage> messages)
+    {
+        item = Item;
+        messages = Messages;
+        return IsSuccessful;
+    }
+
+    public bool HasItem(
+        [NotNullWhen(true)]
+        out TItem? item)
+    {
+        return HasItem(out item) && item is not null;
+    }
+
+    public bool HasItem(
+        [NotNullWhen(true)]
+        out TItem? item,
+        out IReadOnlyList<ResultMessage> messages)
+    {
+        return HasItem(out item, out messages) && item is not null;
+    }
+
+    public bool HasFailed(
+        out TItem? item)
+    {
+        item = Item;
+        return IsSuccessful is false;
+    }
+
+    public bool HasFailed(
+        out TItem? item,
+        out IReadOnlyList<ResultMessage> messages)
+    {
+        item = Item;
+        messages = Messages;
+        return IsSuccessful is false;
+    }
+
+    public bool HasNoItem(
+        [NotNullWhen(false)]
+        out TItem? item)
+    {
+        return HasFailed(out item) && item is null;
+    }
+
+    public bool HasNoItem(
+        [NotNullWhen(false)]
+        out TItem? item,
+        out IReadOnlyList<ResultMessage> messages)
+    {
+        return HasFailed(out item, out messages) && item is null;
     }
 
     public new TItem? Resolve(
@@ -67,19 +138,132 @@ public class Result<TItem> :
             IsSuccessful = exitCode == 0
         };
     }
+
+    public static implicit operator Result<TItem>(
+        Exception exception)
+    {
+        return ErrorResult.FromErrorMessages(exception.ToString());
+    }
+
+    public static bool operator true(
+        Result<TItem> result)
+    {
+        return result.IsSuccessful;
+    }
+
+    public static bool operator false(
+        Result<TItem> result)
+    {
+        return result.IsSuccessful is false;
+    }
 }
 
 public class Result
 {
     public static readonly Result Success = new() { IsSuccessful = true };
 
-    public static readonly ErrorResult Failure = ErrorResult.FromErrorMessages();
+    public static readonly Result Failure = new() { IsSuccessful = false };
+
+    public static Result Combine(
+        Result left,
+        Result right)
+    {
+        return new Result
+        {
+            IsSuccessful = left.IsSuccessful && right.IsSuccessful,
+            Item = (left.Item, right.Item),
+            Messages =
+            [
+                .. left.IsSuccessful is false || right.IsSuccessful ? left.Messages : Enumerable.Empty<ResultMessage>(),
+                .. right.IsSuccessful is false || left.IsSuccessful ? right.Messages : Enumerable.Empty<ResultMessage>()
+            ]
+        };
+    }
+
+    public static Result Either(
+        Result left,
+        Result right)
+    {
+        if (left.IsSuccessful)
+            return left;
+
+        if (right.IsSuccessful)
+            return right;
+
+        return new Result
+        {
+            IsSuccessful = false,
+            Messages = [.. left.Messages, .. right.Messages]
+        };
+    }
 
     public required bool IsSuccessful { get; set; }
 
-    public object? Item { get; set; }
+    public object? Item { get; protected set; }
 
-    public IReadOnlyList<ResultMessage> Messages { get; set; } = [];
+    public IReadOnlyList<ResultMessage> Messages { get; init; } = [];
+
+    public bool HasSucceeded(
+        out object? item)
+    {
+        item = Item;
+        return IsSuccessful;
+    }
+
+    public bool HasSucceeded(
+        out object? item,
+        out IReadOnlyList<ResultMessage> messages)
+    {
+        item = Item;
+        messages = Messages;
+        return IsSuccessful;
+    }
+
+    public bool HasItem(
+        [NotNullWhen(true)]
+        out object? item)
+    {
+        return HasSucceeded(out item) && item is not null;
+    }
+
+    public bool HasItem(
+        [NotNullWhen(true)]
+        out object? item,
+        out IReadOnlyList<ResultMessage> messages)
+    {
+        return HasSucceeded(out item, out messages) && item is not null;
+    }
+
+    public bool HasFailed(
+        out object? item)
+    {
+        item = Item;
+        return IsSuccessful is false;
+    }
+
+    public bool HasFailed(
+        out object? item,
+        out IReadOnlyList<ResultMessage> messages)
+    {
+        item = Item;
+        messages = Messages;
+        return IsSuccessful is false;
+    }
+
+    public bool HasNoItem(
+        [NotNullWhen(false)]
+        out object? item)
+    {
+        return HasFailed(out item) && item is null;
+    }
+
+    public bool HasNoItem(
+        [NotNullWhen(false)]
+        out object? item,
+        out IReadOnlyList<ResultMessage> messages)
+    {
+        return HasFailed(out item, out messages) && item is null;
+    }
 
     public object? Resolve(
         string? message = null)
@@ -126,16 +310,35 @@ public class Result
         };
     }
 
+    public static implicit operator Result(
+        Exception exception)
+    {
+        return ErrorResult.FromErrorMessages(exception.ToString());
+    }
+
+    public static bool operator true(
+        Result result)
+    {
+        return result.IsSuccessful;
+    }
+
+    public static bool operator false(
+        Result result)
+    {
+        return result.IsSuccessful is false;
+    }
+
     public static Result operator &(
         Result left,
         Result right)
     {
-        return new Result
-        {
-            IsSuccessful = left.IsSuccessful && right.IsSuccessful,
-            Item = (left.Item, right.Item),
-            Messages = [.. left.Messages, .. right.Messages]
-        };
+        return Combine(left, right);
     }
 
+    public static Result operator |(
+        Result left,
+        Result right)
+    {
+        return Either(left, right);
+    }
 }

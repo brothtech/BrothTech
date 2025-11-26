@@ -1,7 +1,7 @@
 ﻿using BrothTech.DevKit.Infrastructure.DotNet;
 using System.CommandLine;
 
-namespace BrothTech.DevKit.DomainManagement.Commands.Domain.Add;
+namespace BrothTech.DevKit.WorkspaceManagement.Commands.Domain.Add;
 
 public class DomainAddCommand :
     Command

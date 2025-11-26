@@ -1,39 +1,34 @@
 ﻿using BrothTech.Cli.Shared.Contracts;
 using BrothTech.Contracts.Results;
-using BrothTech.DevKit.DomainManagement.Services;
 using BrothTech.DevKit.Infrastructure.DotNet;
 using BrothTech.DevKit.Infrastructure.Files;
+using BrothTech.DevKit.WorkspaceManagement.Services;
 using BrothTech.Infrastructure.DependencyInjection;
-using System.CommandLine;
 
-namespace BrothTech.DevKit.DomainManagement.Commands.Domain.Add;
+namespace BrothTech.DevKit.WorkspaceManagement.Commands.Domain.Add;
 
-[ServiceDescriptor<ICommandHandler<DomainAddCommand>, DomainAddCommandHandler>]
+[ServiceDescriptor<ICommandHandler<DomainAddCommand, DomainAddCommandResult>, DomainAddCommandHandler>]
 public class DomainAddCommandHandler(
     IFileSystemService fileSystemService,
-    IDomainService domainService,
+    IWorkspaceManagementService domainService,
     IDotNetService dotNetService) :
-    ICommandHandler<DomainAddCommand>
+    ICommandHandler<DomainAddCommand, DomainAddCommandResult>
 {
     private readonly IFileSystemService _fileSystemService = fileSystemService.EnsureNotNull();
-    private readonly IDomainService _domainService = domainService.EnsureNotNull();
+    private readonly IWorkspaceManagementService _domainService = domainService.EnsureNotNull();
     private readonly IDotNetService _dotNetService = dotNetService.EnsureNotNull();
 
-    public async Task HandleAsync(
-        DomainAddCommand command,
-        ParseResult parseResult, 
+    public async Task<Result> TryHandleAsync(
+        DomainAddCommandResult commandResult, 
         CancellationToken token)
     {
         var rootDirectory = _domainService.TryGetRootDirectory().Resolve().EnsureNotNull();
-        var domainName = parseResult.GetRequiredValue(command.Name);
-        var template = parseResult.GetRequiredValue(command.PrimaryProjectType);
-        var result = await CreateDomainSolutionAsync(rootDirectory, domainName, token) &
-                     await CreateDomainProjectsAsync(rootDirectory, domainName, template, token) &
-                     await AddDomainProjectsToSolutionAsync(rootDirectory, domainName, token);
-        _ = result.Resolve();
+        return await TryCreateDomainSolutionAsync(rootDirectory, commandResult.Name, token) &&
+               await TryCreateDomainProjectsAsync(rootDirectory, commandResult.Name, commandResult.PrimaryProjectType ?? DotNetProjectTemplate.ClassLib, token) &&
+               await TryAddDomainProjectsToSolutionAsync(rootDirectory, commandResult.Name, token);
     }
 
-    private async Task<Result> CreateDomainSolutionAsync(
+    private async Task<Result> TryCreateDomainSolutionAsync(
         string rootDirectory,
         string domainName,
         CancellationToken token)
@@ -43,23 +38,23 @@ public class DomainAddCommandHandler(
         return await _dotNetService.TryCreateSolutionAsync(domainName, path, token);
     }
 
-    private async Task<Result> CreateDomainProjectsAsync(
+    private async Task<Result> TryCreateDomainProjectsAsync(
         string rootDirectory,
         string domainName,
         DotNetProjectTemplate template,
         CancellationToken token)
     {
-        var srcPath = @$"{rootDirectory}\{domainName}\src";
+        var srcPath = @$"{rootDirectory}\{domainName}\src\{domainName}";
         _fileSystemService.EnsureDirectoryExists(srcPath);
-        return await _dotNetService.TryCreateProject(domainName, template, srcPath, token) &
-               await _dotNetService.TryCreateProject($"{domainName}.Sandbox", template, srcPath, token) &
+        return await _dotNetService.TryCreateProject(domainName, template, srcPath, token) &&
+               await _dotNetService.TryCreateProject($"{domainName}.Sandbox", template, @$"{srcPath}.Sandbox", token) &&
                await _dotNetService.TryAddProjectReference(
-                   projectPath: @$"{srcPath}\{domainName}.Sandbox\{domainName}.Sandbox.csproj",
-                   referencePath: @$"{srcPath}\{domainName}\{domainName}.csproj",
+                   projectPath: @$"{srcPath}.Sandbox\{domainName}.Sandbox.csproj",
+                   referencePath: @$"{srcPath}\{domainName}.csproj",
                    token: token);
     }
 
-    private async Task<Result> AddDomainProjectsToSolutionAsync(
+    private async Task<Result> TryAddDomainProjectsToSolutionAsync(
         string rootDirectory,
         string domainName,
         CancellationToken token)

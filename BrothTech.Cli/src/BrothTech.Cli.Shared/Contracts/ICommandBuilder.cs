@@ -4,12 +4,9 @@ namespace BrothTech.Cli.Shared.Contracts;
 
 public interface ICommandBuilder<TParentCommand> : 
     ICommandBuilder
-    where TParentCommand : Command;
+    where TParentCommand : Command, new();
 
 public interface ICommandBuilder
 {
-    bool IsChild(
-        Command command);
-
     Command? Build();
 }

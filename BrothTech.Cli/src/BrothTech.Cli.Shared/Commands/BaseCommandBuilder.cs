@@ -4,22 +4,21 @@ using System.CommandLine;
 
 namespace BrothTech.Cli.Shared.Commands;
 
-public abstract class BaseCommandBuilder<TCommand>(
+public abstract class BaseCommandBuilder<TParentCommand, TCommand, TCommandResult>(
     ILogger logger,
-    IEnumerable<ICommandHandler<TCommand>> handlers,
-    IEnumerable<ICommandBuilder> builders) :
-    ICommandBuilder
-    where TCommand : Command
+    IEnumerable<ICommandHandler<TCommand, TCommandResult>> handlers,
+    IEnumerable<ICommandBuilder<TCommand>> childBuilders) :
+    ICommandBuilder<TParentCommand>
+    where TParentCommand : Command, new()
+    where TCommand : Command, new()
+    where TCommandResult : ICommandResult<TCommand>, new()
 {
     private readonly ILogger _logger = logger.EnsureNotNull();
-    private readonly IEnumerable<ICommandHandler<TCommand>> _handlers = handlers.EnsureNotNull();
-    private readonly IEnumerable<ICommandBuilder> _builders = builders.EnsureNotNull();
+    private readonly IEnumerable<ICommandHandler<TCommand, TCommandResult>> _handlers = handlers.EnsureNotNull();
+    private readonly IEnumerable<ICommandBuilder<TCommand>> _childBuilders = childBuilders.EnsureNotNull();
     private TCommand? _command;
 
     protected virtual bool IsRoot => false;
-
-    public abstract bool IsChild(
-        Command command);
 
     public Command? Build()
     {
@@ -28,7 +27,7 @@ public abstract class BaseCommandBuilder<TCommand>(
 
         try
         {
-            _command = BuildInternal();
+            _command = new TCommand();
             _command.SetAction(HandleAsync);
             AddChildren(_command);
             return _command;
@@ -48,8 +47,6 @@ public abstract class BaseCommandBuilder<TCommand>(
         }
     }
 
-    protected abstract TCommand BuildInternal();
-
     private async Task HandleAsync(
         ParseResult parseResult,
         CancellationToken token)
@@ -64,11 +61,21 @@ public abstract class BaseCommandBuilder<TCommand>(
         ParseResult parseResult,
         CancellationTokenSource tokenSource,
         TCommand command,
-        ICommandHandler<TCommand> handler)
+        ICommandHandler<TCommand, TCommandResult> handler)
     {
         try
         {
-            await handler.HandleAsync(command, parseResult, tokenSource.Token);
+            var commandResult = new TCommandResult()
+            {
+                Command = command,
+                ParseResult = parseResult
+            };
+            var result = await handler.TryHandleAsync(commandResult, tokenSource.Token);
+            if (result.IsSuccessful)
+                return;
+
+            foreach (var message in result.Messages)
+                _logger.Log(message.LogLevel, message.Message, message.Args);
         }
         catch (Exception exception)
         {
@@ -84,8 +91,7 @@ public abstract class BaseCommandBuilder<TCommand>(
     private void AddChildren(
         Command command)
     {
-        foreach (var builder in _builders)
-            if (builder.IsChild(command))
-                command.Add(builder.Build().EnsureNotNull());
+        foreach (var builder in _childBuilders)
+            command.Add(builder.Build().EnsureNotNull());
     }
 }

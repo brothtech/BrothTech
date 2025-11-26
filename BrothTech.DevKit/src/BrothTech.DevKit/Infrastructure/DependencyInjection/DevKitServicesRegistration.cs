@@ -1,7 +1,7 @@
 ﻿using BrothTech.Cli.Shared.Contracts;
-using BrothTech.DevKit.DomainManagement.Services;
 using BrothTech.DevKit.Infrastructure.DotNet;
 using BrothTech.DevKit.Infrastructure.Files;
+using BrothTech.DevKit.WorkspaceManagement.Services;
 using BrothTech.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,6 +25,6 @@ public class DevKitServicesRegistration :
         serviceCollection.AddSingleton<IFileSystemService, FileSystemService>();
         serviceCollection.AddSingleton<IProcessRunner, ProcessRunner>();
         serviceCollection.AddSingleton<IDotNetService, DotNetService>();
-        serviceCollection.AddSingleton<IDomainService, DomainService>();
+        serviceCollection.AddSingleton<IWorkspaceManagementService, WorkspaceManagementService>();
     }
 }

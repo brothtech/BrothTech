@@ -51,7 +51,9 @@ public class DotNetService(
             "new",
             "sln",
             "-n",
-            name);
+            name,
+            "-o",
+            path);
     }
     public Task<Result> TryAddProjectToSolution(
         string solutionPath, 
@@ -81,6 +83,8 @@ public class DotNetService(
             template.ToString().ToLower(),
             "-n",
             name,
+            "-o",
+            path,
             "-f",
             "net10.0");
     }

@@ -1,28 +1,17 @@
 ﻿using BrothTech.Cli.Shared.Commands;
+using BrothTech.Cli.Shared.Commands.Root;
 using BrothTech.Cli.Shared.Contracts;
 using BrothTech.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.CommandLine;
 
 namespace BrothTech.Cli;
 
 [ServiceDescriptor<RootCommandBuilder>]
 public class RootCommandBuilder(
     ILogger<RootCommandBuilder> logger,
-    IEnumerable<ICommandHandler<RootCommand>> handlers,
-    IEnumerable<ICommandBuilder<RootCommand>> builders) :
-    BaseCommandBuilder<RootCommand>(logger, handlers, builders)
+    IEnumerable<ICommandHandler<RootCliCommand, RootCliCommandResult>> handlers,
+    IEnumerable<ICommandBuilder<RootCliCommand>> builders) :
+    BaseCommandBuilder<RootCliCommand, RootCliCommand, RootCliCommandResult>(logger, handlers, builders)
 {
     protected override bool IsRoot => true;
-
-    public override bool IsChild(
-        Command command)
-    {
-        return false;
-    }
-
-    protected override RootCommand BuildInternal()
-    {
-        return new RootCommand();
-    }
 }

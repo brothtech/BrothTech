@@ -2,3 +2,8 @@
 
 # CA1822: Mark members as static
 dotnet_diagnostic.CA1822.severity = none
+
+max_line_length = 128
+
+# CA2254: Template should be a static expression
+dotnet_diagnostic.CA2254.severity = none

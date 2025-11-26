@@ -1,6 +1,6 @@
 ﻿using System.CommandLine;
 
-namespace BrothTech.DevKit.DomainManagement.Commands.Domain;
+namespace BrothTech.DevKit.WorkspaceManagement.Commands.Domain;
 
 public class DomainCommand :
     Command
