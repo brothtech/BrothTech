@@ -2,6 +2,7 @@
 using BrothTech.DevKit.Infrastructure.DotNet;
 using BrothTech.DevKit.Infrastructure.Files;
 using BrothTech.DevKit.WorkspaceManagement.Services;
+using BrothTech.DevKit.WorkspaceManagement.Workspaces.Services;
 using BrothTech.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,6 +23,7 @@ public class DevKitServicesRegistration :
     protected override void RegisterAdditionalServices(
         IServiceCollection serviceCollection)
     {
+        serviceCollection.AddSingleton<IWorkspaceInfoService, WorkspaceInfoService>();
         serviceCollection.AddSingleton<IFileSystemService, FileSystemService>();
         serviceCollection.AddSingleton<IProcessRunner, ProcessRunner>();
         serviceCollection.AddSingleton<IDotNetService, DotNetService>();

@@ -1,4 +1,5 @@
-﻿using System.CommandLine;
+﻿using BrothTech.Contracts.Results;
+using System.CommandLine;
 
 namespace BrothTech.Cli.Shared.Contracts;
 
@@ -8,5 +9,5 @@ public interface ICommandBuilder<TParentCommand> :
 
 public interface ICommandBuilder
 {
-    Command? Build();
+    Result<Command> TryBuild();
 }

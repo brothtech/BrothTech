@@ -38,7 +38,8 @@ public abstract class DomainServicesRegistration
     {
         try
         {
-            serviceCollection.Add(serviceType.GetCustomAttribute<ServiceDescriptorAttribute>().EnsureNotNull());
+            foreach (var serviceDescriptorAttribute in serviceType.GetCustomAttributes<ServiceDescriptorAttribute>())
+                serviceCollection.Add(serviceDescriptorAttribute);
         }
         catch (Exception exception)
         {

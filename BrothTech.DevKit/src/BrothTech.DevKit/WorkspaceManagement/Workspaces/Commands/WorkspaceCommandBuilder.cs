@@ -4,12 +4,16 @@ using BrothTech.Cli.Shared.Contracts;
 using BrothTech.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace BrothTech.DevKit.WorkspaceManagement.Commands.Workspace;
+namespace BrothTech.DevKit.WorkspaceManagement.Workspaces.Commands;
 
 [ServiceDescriptor<ICommandBuilder<RootCliCommand>, WorkspaceCommandBuilder>]
 public class WorkspaceCommandBuilder(
     ILogger<WorkspaceCommandBuilder> logger,
+    IEnumerable<ICommandBuilder<WorkspaceCommand>> builders,
     IEnumerable<ICommandHandler<WorkspaceCommand, WorkspaceCommandResult>> handlers,
-    IEnumerable<ICommandBuilder<WorkspaceCommand>> builders) :
-    BaseCommandBuilder<RootCliCommand, WorkspaceCommand, WorkspaceCommandResult>(logger, handlers, builders),
-    ICommandBuilder<RootCliCommand>;
+    ICliCommandInvoker commandInvoker) :
+    BaseCommandBuilder<RootCliCommand, WorkspaceCommand, WorkspaceCommandResult>(
+        logger, 
+        builders, 
+        handlers, 
+        commandInvoker);

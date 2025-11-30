@@ -11,6 +11,15 @@ public interface ICommandHandler<TCommand, TCommandResult> :
     Task<Result> TryHandleAsync(
         TCommandResult commandResult,
         CancellationToken token);
+
+    bool ShouldInvokeNewCommand(
+        TCommandResult commandResult);
+
+    IEnumerable<string> GetNewCommandArgs(
+        TCommandResult commandResult);
 }
 
-public interface ICommandHandler;
+public interface ICommandHandler
+{
+    int Priority { get; }
+}

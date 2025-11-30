@@ -1,6 +1,6 @@
 ﻿using System.CommandLine;
 
-namespace BrothTech.DevKit.WorkspaceManagement.Commands.Workspace;
+namespace BrothTech.DevKit.WorkspaceManagement.Workspaces.Commands;
 
 public class WorkspaceCommand :
     Command

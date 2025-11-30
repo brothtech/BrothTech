@@ -1,4 +1,5 @@
 ﻿using BrothTech.Cli.Shared.Contracts;
+using BrothTech.Contracts.Results;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
 
@@ -6,62 +7,83 @@ namespace BrothTech.Cli.Shared.Commands;
 
 public abstract class BaseCommandBuilder<TParentCommand, TCommand, TCommandResult>(
     ILogger logger,
+    IEnumerable<ICommandBuilder<TCommand>> childBuilders,
     IEnumerable<ICommandHandler<TCommand, TCommandResult>> handlers,
-    IEnumerable<ICommandBuilder<TCommand>> childBuilders) :
+    ICliCommandInvoker commandInvoker) :
     ICommandBuilder<TParentCommand>
     where TParentCommand : Command, new()
     where TCommand : Command, new()
     where TCommandResult : ICommandResult<TCommand>, new()
 {
     private readonly ILogger _logger = logger.EnsureNotNull();
-    private readonly IEnumerable<ICommandHandler<TCommand, TCommandResult>> _handlers = handlers.EnsureNotNull();
     private readonly IEnumerable<ICommandBuilder<TCommand>> _childBuilders = childBuilders.EnsureNotNull();
+    private readonly IEnumerable<ICommandHandler<TCommand, TCommandResult>> _handlers = handlers.EnsureNotNull();
+    private readonly ICliCommandInvoker _commandInvoker = commandInvoker.EnsureNotNull();
     private TCommand? _command;
 
-    protected virtual bool IsRoot => false;
-
-    public Command? Build()
+    public virtual Result<Command> TryBuild()
     {
         if (_command is not null)
             return _command;
 
-        try
-        {
-            _command = new TCommand();
-            _command.SetAction(HandleAsync);
-            AddChildren(_command);
-            return _command;
-        }
-        catch (Exception exception)
-        {
-            if (IsRoot is false)
-                throw;
+        _command = new TCommand();
+        if (TryAddChildren(_command).HasFailed(out _, out var messages))
+            return ErrorResult.FromMessages(messages);
 
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(
-                    exception: exception,
-                    message: "An error occurred building command {command}",
-                    GetType().Name);
+        _command.SetAction(HandleAsync);
+        return _command;
+    }
 
-            return null;
+    private Result TryAddChildren(
+        Command command)
+    {
+        var aggregateResult = Result.Success;
+        foreach (var builder in _childBuilders)
+        {
+            aggregateResult &= builder.TryBuild().OutWithItem(out var child);
+            if (aggregateResult.IsSuccessful is false)
+                return aggregateResult;
+
+            command.Add(child);
         }
+
+        return aggregateResult;
     }
 
     private async Task HandleAsync(
         ParseResult parseResult,
         CancellationToken token)
     {
-        using var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
         var command = _command.EnsureNotNull();
-        foreach (var handler in _handlers)
-            await ExecuteHandlerAsync(parseResult, tokenSource, command, handler);
+        var result = await TryHandleAsync(parseResult, command, token);
+        if (result.IsSuccessful)
+            return;
+
+        foreach (var message in result.Messages)
+            _logger.Log(message.LogLevel, message.Message, message.Args);
     }
 
-    private async Task ExecuteHandlerAsync(
+    public async Task<Result> TryHandleAsync(
         ParseResult parseResult,
-        CancellationTokenSource tokenSource,
         TCommand command,
-        ICommandHandler<TCommand, TCommandResult> handler)
+        CancellationToken token)
+    {
+        var aggregateResult = Result.Success;
+        foreach (var handler in _handlers.OrderBy(x => x.Priority))
+        {
+            aggregateResult &= await TryExecuteHandlerAsync(parseResult, command, handler, token);
+            if (aggregateResult.IsSuccessful is false)
+                return aggregateResult;
+        }
+
+        return aggregateResult;
+    }
+
+    private async Task<Result> TryExecuteHandlerAsync(
+        ParseResult parseResult,
+        TCommand command,
+        ICommandHandler<TCommand, TCommandResult> handler,
+        CancellationToken token)
     {
         try
         {
@@ -70,28 +92,24 @@ public abstract class BaseCommandBuilder<TParentCommand, TCommand, TCommandResul
                 Command = command,
                 ParseResult = parseResult
             };
-            var result = await handler.TryHandleAsync(commandResult, tokenSource.Token);
-            if (result.IsSuccessful)
-                return;
+            var handlerResult = await handler.TryHandleAsync(commandResult, token);
+            if (handler.ShouldInvokeNewCommand(commandResult))
+                await InvokeNewCommandAsync(handler, commandResult, token);
 
-            foreach (var message in result.Messages)
-                _logger.Log(message.LogLevel, message.Message, message.Args);
+            return handlerResult;
         }
         catch (Exception exception)
         {
-            tokenSource.Cancel();
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(
-                    exception: exception,
-                    message: "An error occurred executing {handler}",
-                    handler.GetType().Name);
+            return exception;
         }
     }
 
-    private void AddChildren(
-        Command command)
+    private async Task<Result> InvokeNewCommandAsync(
+        ICommandHandler<TCommand, TCommandResult> handler,
+        TCommandResult commandResult,
+        CancellationToken token)
     {
-        foreach (var builder in _childBuilders)
-            command.Add(builder.Build().EnsureNotNull());
+        var args = handler.GetNewCommandArgs(commandResult).ToArray();
+        return await _commandInvoker.TryInvokeAsync(args, token);
     }
 }

@@ -1,8 +1,7 @@
 ﻿using BrothTech.Contracts.Results;
 using BrothTech.DevKit.Infrastructure.DotNet;
 using BrothTech.DevKit.Infrastructure.Files;
-using BrothTech.DevKit.WorkspaceManagement.Commands.Domain.Add;
-using System.Text.Json.Serialization;
+using BrothTech.DevKit.WorkspaceManagement.Projects.Commands.Add;
 
 namespace BrothTech.DevKit.WorkspaceManagement.Services;
 
@@ -87,26 +86,28 @@ public class WorkspaceManagementService(
             projectPath: @$"{path}\src\{domainName}\{domainName}.csproj",
             token);
     }
-
-    
 }
 
 public class WorkspaceInfo
 {
     public required string Name { get; set; }
 
-    public required DomainInfo[] Domains { get; set; }
+    public DomainInfo[] Domains { get; set; } = [];
 }
 
 public class DomainInfo
 {
+    public string? ParentDomainName { get; set; }
+    
     public required string Name { get; set; }
 
-    public required ProjectInfo[] Projects { get; set; }
+    public ProjectInfo[] Projects { get; set; } = [];
 }
 
 public class ProjectInfo
 {
+    public required string DomainName { get; set; }
+
     public required string Name { get; set; }
 
     public required ProjectExposureType ExposureType { get; set; }
@@ -121,6 +122,90 @@ public enum ProjectExposureType
     Endpoint,
     Sandbox
 }
+
+public static class ProjectExposureTypeExtentions
+{
+    public static bool IsVisibleTo(
+        this ProjectExposureType value,
+        ProjectExposureType target,
+        DomainRelationType relationType)
+    {
+        return value switch
+        {
+            ProjectExposureType.Internal => target switch
+            {
+                ProjectExposureType.Internal => relationType is DomainRelationType.IntraDomainSibling,
+                ProjectExposureType.Public => relationType is DomainRelationType.IntraDomainSibling,
+                _ => false
+            },
+            ProjectExposureType.Public => target switch
+            {
+                ProjectExposureType.Internal => relationType is DomainRelationType.Descendent,
+                ProjectExposureType.Public => relationType is DomainRelationType.Descendent,
+                ProjectExposureType.Endpoint => true,
+                ProjectExposureType.Sandbox => relationType is DomainRelationType.Descendent or
+                                                               DomainRelationType.IntraDomainSibling,
+                _ => false
+            },
+            ProjectExposureType.Shared => target switch
+            {
+                ProjectExposureType.Internal => relationType is not DomainRelationType.Ancestor,
+                ProjectExposureType.Public => relationType is not DomainRelationType.Ancestor,
+                ProjectExposureType.Shared => relationType is DomainRelationType.Descendent,
+                ProjectExposureType.Endpoint => true,
+                ProjectExposureType.Sandbox => relationType is DomainRelationType.Descendent or
+                                                               DomainRelationType.IntraDomainSibling,
+                _ => false
+            },
+            _ => false
+        };
+    }
+
+    public static bool CanDependOn(
+        this ProjectExposureType value,
+        ProjectExposureType target,
+        DomainRelationType relationType)
+    {
+        return value switch
+        {
+            ProjectExposureType.Internal => target switch
+            {
+                ProjectExposureType.Shared => relationType is not DomainRelationType.Descendent,
+                ProjectExposureType.Public => relationType is DomainRelationType.Ancestor,
+                _ => false
+            },
+            ProjectExposureType.Public => target switch
+            {
+                ProjectExposureType.Internal => relationType is DomainRelationType.IntraDomainSibling,
+                ProjectExposureType.Shared => relationType is not DomainRelationType.Descendent,
+                _ => false
+            },
+            ProjectExposureType.Shared => target switch
+            {
+                ProjectExposureType.Shared => relationType is DomainRelationType.Ancestor,
+                _ => false
+            },
+            ProjectExposureType.Endpoint => target switch
+            {
+                ProjectExposureType.Public => relationType is not DomainRelationType.Descendent,
+                ProjectExposureType.Shared => relationType is not DomainRelationType.Descendent,
+                _ => false
+            },
+            ProjectExposureType.Sandbox => target switch
+            {
+                ProjectExposureType.Internal => relationType is DomainRelationType.IntraDomainSibling or
+                                                                DomainRelationType.Ancestor,
+                ProjectExposureType.Public => relationType is DomainRelationType.IntraDomainSibling or
+                                                              DomainRelationType.Ancestor,
+                ProjectExposureType.Shared => relationType is DomainRelationType.IntraDomainSibling or
+                                                              DomainRelationType.Ancestor,
+                _ => false
+            },
+            _ => false
+        };
+    }
+}
+
 
 /*
 -project access modififers

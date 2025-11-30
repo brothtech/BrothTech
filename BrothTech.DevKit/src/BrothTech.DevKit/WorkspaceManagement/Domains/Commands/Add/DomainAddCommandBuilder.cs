@@ -3,12 +3,16 @@ using BrothTech.Cli.Shared.Contracts;
 using BrothTech.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace BrothTech.DevKit.WorkspaceManagement.Commands.Domain.Add;
+namespace BrothTech.DevKit.WorkspaceManagement.Domains.Commands.Add;
 
 [ServiceDescriptor<ICommandBuilder<DomainCommand>, DomainAddCommandBuilder>]
 public class DomainAddCommandBuilder(
     ILogger<DomainAddCommandBuilder> logger,
+    IEnumerable<ICommandBuilder<DomainAddCommand>> builders,
     IEnumerable<ICommandHandler<DomainAddCommand, DomainAddCommandResult>> handlers,
-    IEnumerable<ICommandBuilder<DomainAddCommand>> builders) :
-    BaseCommandBuilder<DomainCommand, DomainAddCommand, DomainAddCommandResult>(logger, handlers, builders),
-    ICommandBuilder<DomainCommand>;
+    ICliCommandInvoker commandInvoker) :
+    BaseCommandBuilder<DomainCommand, DomainAddCommand, DomainAddCommandResult>(
+        logger, 
+        builders, 
+        handlers, 
+        commandInvoker);

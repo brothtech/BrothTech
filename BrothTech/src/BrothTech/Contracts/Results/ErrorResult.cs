@@ -10,6 +10,16 @@ public class ErrorResult :
     }
 
     public static ErrorResult FromMessages(
+        IReadOnlyList<ResultMessage> messages)
+    {
+        return new ErrorResult
+        {
+            IsSuccessful = false,
+            Messages = [.. messages]
+        };
+    }
+
+    public static ErrorResult FromMessages(
         params ResultMessage[] messages)
     {
         return new ErrorResult

@@ -25,7 +25,8 @@ public class EntryPoint
         try
         {
             var serviceProvider = BuildServiceProvider();
-            var service1 = serviceProvider.GetRequiredService<T1>();
+            using var scope = serviceProvider.CreateScope();
+            var service1 = scope.ServiceProvider.GetRequiredService<T1>();
             return await task(service1);
         }
         catch (Exception exception)
@@ -38,10 +39,34 @@ public class EntryPoint
         }
     }
 
-    public virtual IServiceProvider BuildServiceProvider()
+    public virtual async Task<int> RunAsync<T1, T2>(
+        Func<T1, T2, Task<int>> task)
+        where T1 : class
+        where T2 : class
+    {
+        try
+        {
+            var serviceProvider = BuildServiceProvider();
+            using var scope = serviceProvider.CreateScope();
+            var service1 = scope.ServiceProvider.GetRequiredService<T1>();
+            var service2 = scope.ServiceProvider.GetRequiredService<T2>();
+            return await task(service1, service2);
+        }
+        catch (Exception exception)
+        {
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(
+                    exception: exception,
+                    message: "An error occurred executing the entry point task.");
+            return 1;
+        }
+    }
+
+    protected virtual IServiceProvider BuildServiceProvider()
     {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddLogging(x => x.AddSimpleConsole());
+        serviceCollection.AddMemoryCache();
         foreach (var type in _registrationTypes)
             ExecuteDomainServicesRegistration(serviceCollection, type);
 

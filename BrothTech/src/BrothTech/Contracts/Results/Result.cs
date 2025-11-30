@@ -5,6 +5,10 @@ namespace BrothTech.Contracts.Results;
 public class Result<TItem> :
     Result
 {
+    public new static readonly Result<TItem> Success = new() { IsSuccessful = true };
+
+    public new static readonly Result<TItem> Failure = new() { IsSuccessful = false };
+
     public new TItem? Item
     {
         get => (TItem?)base.Item;
@@ -80,6 +84,54 @@ public class Result<TItem> :
         out IReadOnlyList<ResultMessage> messages)
     {
         return HasFailed(out item, out messages) && item is null;
+    }
+
+    public Result<TItem> Out(
+        out TItem? item)
+    {
+        item = Item;
+        return this;
+    }
+
+    public Result<TItem> Out(
+        out TItem? item,
+        out IReadOnlyList<ResultMessage> messages)
+    {
+        item = Item;
+        messages = Messages;
+        return this;
+    }
+
+    public Result<TItem> OutWithItem(
+        out TItem item)
+    {
+        item = Item!;
+        return Item is null ? Failure : this;
+    }
+
+    public Result<TItem> OutWithItem(
+        out TItem item,
+        out IReadOnlyList<ResultMessage> messages)
+    {
+        item = Item!;
+        messages = Messages;
+        return Item is null ? Failure : this;
+    }
+
+    public Result<TItem> OutWithNoItem(
+        out TItem item)
+    {
+        item = Item!;
+        return Item is not null ? Failure : this;
+    }
+
+    public Result<TItem> OutWithNoItem(
+        out TItem item,
+        out IReadOnlyList<ResultMessage> messages)
+    {
+        item = Item!;
+        messages = Messages;
+        return Item is not null ? Failure : this;
     }
 
     public new TItem? Resolve(
@@ -308,6 +360,12 @@ public class Result
         {
             IsSuccessful = exitCode == 0
         };
+    }
+
+    public static implicit operator int(
+        Result result)
+    {
+        return result.IsSuccessful ? 0 : 1;
     }
 
     public static implicit operator Result(
