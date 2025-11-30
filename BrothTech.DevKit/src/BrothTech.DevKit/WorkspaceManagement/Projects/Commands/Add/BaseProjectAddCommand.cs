@@ -11,20 +11,11 @@ public abstract class BaseProjectAddCommand :
 
     public Argument<ProjectExposureType> ExposureType { get; } = new(nameof(ExposureType));
 
-    public Option<string> WorkspacePath { get; } = new($"--{nameof(WorkspacePath)}", "-w", "--workspace")
-    {
-        Required = true,
-    };
+    public Option<string> WorkspacePath { get; } = new($"--{nameof(WorkspacePath)}", "-w", "--workspace");
 
-    public Option<string> DomainName { get; } = new($"--{nameof(DomainName)}", "-d", "--domain")
-    {
-        Required = true,
-    };
+    public Option<string> DomainName { get; } = new($"--{nameof(DomainName)}", "-d", "--domain");
 
-    public Option<DotNetProjectTemplate> Template { get; } = new($"--{nameof(Template)}", "-t", "--template")
-    {
-        Required = true,
-    };
+    public Option<DotNetProjectTemplate> Template { get; } = new($"--{nameof(Template)}", "-t", "--template");
 
     public BaseProjectAddCommand(
         string name,

@@ -18,4 +18,24 @@ public static class StringExtensions
     {
         return string.IsNullOrEmpty(value); 
     }
+
+    public static string IfNullOrWhiteSpace(
+        this string? value,
+        string nullValue)
+    {
+        if (value.IsNullOrWhiteSpace())
+            return nullValue;
+
+        return value;
+    }
+
+    public static string IfNullOrEmpty(
+        this string? value,
+        string nullValue)
+    {
+        if (value.IsNullOrEmpty())
+            return nullValue;
+
+        return value;
+    }
 }

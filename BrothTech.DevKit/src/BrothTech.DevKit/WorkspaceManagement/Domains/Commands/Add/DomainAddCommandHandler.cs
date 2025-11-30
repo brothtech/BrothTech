@@ -2,6 +2,7 @@
 using BrothTech.Contracts.Results;
 using BrothTech.DevKit.Infrastructure.DotNet;
 using BrothTech.DevKit.Infrastructure.Files;
+using BrothTech.DevKit.WorkspaceManagement.Projects.Commands;
 using BrothTech.DevKit.WorkspaceManagement.Projects.Commands.Add;
 using BrothTech.DevKit.WorkspaceManagement.Services;
 using BrothTech.DevKit.WorkspaceManagement.Workspaces.Services;
@@ -67,28 +68,40 @@ public class DomainAddCommandHandler(
         return _workspaceInfoService.TryAddDomainInfo(workspacePath, domain);
     }
 
-    public bool ShouldInvokeNewCommand(
+    public bool ShouldInvokeNewCommands(
         DomainAddCommandResult commandResult)
     {
         return true;
     }
 
-    public IEnumerable<string> GetNewCommandArgs(
+    public IEnumerable<string[]> GetNewCommandsArgs(
         DomainAddCommandResult commandResult)
     {
+        yield return [.. GetProjectAddCommandArgs(commandResult)];
+
+        if (commandResult.NoSharedProject is true)
+            yield return [.. GetProjectAddCommandArgs(commandResult, ".Shared", ProjectExposureType.Shared)];
+
+        if (commandResult.NoSandboxProject is true)
+            yield return [.. GetProjectAddCommandArgs(commandResult, ".Sandbox", ProjectExposureType.Sandbox)];
+    }
+
+    private IEnumerable<string> GetProjectAddCommandArgs(
+        DomainAddCommandResult commandResult,
+        string? projectNameSuffix = null,
+        ProjectExposureType? exposureType = null)
+    {
+        yield return nameof(ProjectCommand);
         yield return nameof(ProjectAddCommand);
+        yield return $"{commandResult.Name}{projectNameSuffix}";
+        yield return exposureType?.ToString() ?? commandResult.ExposureType.Value.ToString();
+        yield return $"--{nameof(ProjectAddCommand.DomainName)}";
         yield return commandResult.Name;
-        yield return commandResult.ExposureType.Value.ToString();
+
         if (commandResult.WorkspacePath.IsNullOrWhiteSpace() is false)
         {
             yield return $"--{nameof(ProjectAddCommand.WorkspacePath)}";
             yield return commandResult.WorkspacePath;
-        }
-
-        if (commandResult.DomainName.IsNullOrWhiteSpace() is false)
-        {
-            yield return $"--{nameof(ProjectAddCommand.DomainName)}";
-            yield return commandResult.DomainName;
         }
 
         if (commandResult.Template is not null and not DotNetProjectTemplate.None)

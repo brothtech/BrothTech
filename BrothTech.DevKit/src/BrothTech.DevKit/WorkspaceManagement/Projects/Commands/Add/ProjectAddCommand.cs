@@ -7,5 +7,6 @@ public class ProjectAddCommand :
         base(nameof(ProjectAddCommand))
     {
         Aliases.Add("add");
+        DomainName.Required = true;
     }
 }

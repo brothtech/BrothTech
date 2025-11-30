@@ -31,6 +31,7 @@ public abstract class BaseCommandBuilder<TParentCommand, TCommand, TCommandResul
             return ErrorResult.FromMessages(messages);
 
         _command.SetAction(HandleAsync);
+        OnBuilt(_command);
         return _command;
     }
 
@@ -93,7 +94,7 @@ public abstract class BaseCommandBuilder<TParentCommand, TCommand, TCommandResul
                 ParseResult = parseResult
             };
             var handlerResult = await handler.TryHandleAsync(commandResult, token);
-            if (handler.ShouldInvokeNewCommand(commandResult))
+            if (handlerResult.IsSuccessful && handler.ShouldInvokeNewCommands(commandResult))
                 await InvokeNewCommandAsync(handler, commandResult, token);
 
             return handlerResult;
@@ -109,7 +110,19 @@ public abstract class BaseCommandBuilder<TParentCommand, TCommand, TCommandResul
         TCommandResult commandResult,
         CancellationToken token)
     {
-        var args = handler.GetNewCommandArgs(commandResult).ToArray();
-        return await _commandInvoker.TryInvokeAsync(args, token);
+        var aggregateResult = Result.Success;
+        foreach (var args in handler.GetNewCommandsArgs(commandResult))
+        {
+            aggregateResult &= await _commandInvoker.TryInvokeAsync(args, token);
+            if (aggregateResult.IsSuccessful is false)
+                return aggregateResult;
+        }
+
+        return aggregateResult;
+    }
+
+    protected virtual void OnBuilt(
+        TCommand command)
+    {
     }
 }

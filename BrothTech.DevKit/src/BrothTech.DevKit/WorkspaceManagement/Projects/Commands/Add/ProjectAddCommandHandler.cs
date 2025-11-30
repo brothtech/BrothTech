@@ -84,7 +84,7 @@ public class ProjectAddCommandHandler(
     {
         var rootSolutionPath = @$"{workspacePath}\{workspace.Name}.Root.sln";
         var domainSolutionPath = @$"{workspacePath}\{project.DomainName}\{project.DomainName}.sln";
-        var projectPath = @$"{workspacePath}\{project.DomainName}\src\{project.Name}.csproj";
+        var projectPath = @$"{workspacePath}\{project.DomainName}\src\{project.Name}\{project.Name}.csproj";
         return await _dotNetService.TryAddProjectToSolution(rootSolutionPath, projectPath, token) &&
                await _dotNetService.TryAddProjectToSolution(domainSolutionPath, projectPath, token);
     }
@@ -116,17 +116,17 @@ public class ProjectAddCommandHandler(
         DomainInfo domain,
         DomainInfo targetDomain)
     {
-        if (IsDescendentDomain(workspace, domain, targetDomain))
-            return DomainRelationType.Descendent;
-
-        if (IsDescendentDomain(workspace, targetDomain, domain))
-            return DomainRelationType.Ancestor;
-
         if (domain.Name == targetDomain.Name)
             return DomainRelationType.IntraDomainSibling;
 
         if (domain.ParentDomainName == targetDomain.ParentDomainName)
             return DomainRelationType.InterDomainSibling;
+
+        if (IsDescendentDomain(workspace, domain, targetDomain))
+            return DomainRelationType.Descendent;
+
+        if (IsDescendentDomain(workspace, targetDomain, domain))
+            return DomainRelationType.Ancestor;
 
         return DomainRelationType.None;
     }
@@ -197,13 +197,13 @@ public class ProjectAddCommandHandler(
                await _dotNetService.TryAddProjectToSolution(targetSolutionPath, projectPath, token);
     }
 
-    public bool ShouldInvokeNewCommand(
+    public bool ShouldInvokeNewCommands(
         ProjectAddCommandResult commandResult)
     {
         return false;
     }
 
-    public IEnumerable<string> GetNewCommandArgs(
+    public IEnumerable<string[]> GetNewCommandsArgs(
         ProjectAddCommandResult commandResult)
     {
         return [];

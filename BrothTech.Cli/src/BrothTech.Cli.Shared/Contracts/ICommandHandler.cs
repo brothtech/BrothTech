@@ -12,10 +12,10 @@ public interface ICommandHandler<TCommand, TCommandResult> :
         TCommandResult commandResult,
         CancellationToken token);
 
-    bool ShouldInvokeNewCommand(
+    bool ShouldInvokeNewCommands(
         TCommandResult commandResult);
 
-    IEnumerable<string> GetNewCommandArgs(
+    IEnumerable<string[]> GetNewCommandsArgs(
         TCommandResult commandResult);
 }
 

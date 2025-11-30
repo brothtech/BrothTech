@@ -44,7 +44,7 @@ public class Result<TItem> :
         [NotNullWhen(true)]
         out TItem? item)
     {
-        return HasItem(out item) && item is not null;
+        return HasSucceeded(out item) && item is not null;
     }
 
     public bool HasItem(
@@ -52,7 +52,7 @@ public class Result<TItem> :
         out TItem? item,
         out IReadOnlyList<ResultMessage> messages)
     {
-        return HasItem(out item, out messages) && item is not null;
+        return HasSucceeded(out item, out messages) && item is not null;
     }
 
     public bool HasFailed(
