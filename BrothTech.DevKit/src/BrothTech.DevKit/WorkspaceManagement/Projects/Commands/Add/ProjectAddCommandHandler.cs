@@ -70,10 +70,10 @@ public class ProjectAddCommandHandler(
         string domainName,
         CancellationToken token)
     {
-        var srcPath = @$"{workspacePath}\{domainName}\src\{domainName}";
+        var projectDirectory = @$"{workspacePath}\{domainName}\src\{commandResult.Name}";
         var template = commandResult.Template ?? DotNetProjectTemplate.ClassLib;
-        _fileSystemService.EnsureDirectoryExists(srcPath);
-        return await _dotNetService.TryCreateProject(domainName, template, srcPath, token);
+        _fileSystemService.EnsureDirectoryExists(projectDirectory);
+        return await _dotNetService.TryCreateProject(commandResult.Name, template, projectDirectory, token);
     }
 
     private async Task<Result> TryAddToRootAndDomainSolution(
@@ -190,8 +190,8 @@ public class ProjectAddCommandHandler(
         ProjectInfo targetProject,
         CancellationToken token)
     {
-        var projectPath = @$"{workspacePath}\{project.DomainName}\src\{project.Name}.csproj";
-        var targetProjectPath = @$"{workspacePath}\{targetProject.DomainName}\src\{targetProject.Name}.csproj";
+        var projectPath = @$"{workspacePath}\{project.DomainName}\src\{project.Name}\{project.Name}.csproj";
+        var targetProjectPath = @$"{workspacePath}\{targetProject.DomainName}\src\{targetProject.Name}\{targetProject.Name}.csproj";
         var targetSolutionPath = @$"{workspacePath}\{targetProject.DomainName}\{targetProject.DomainName}.sln";
         return await _dotNetService.TryAddProjectReference(projectPath, targetProjectPath, token) &&
                await _dotNetService.TryAddProjectToSolution(targetSolutionPath, projectPath, token);

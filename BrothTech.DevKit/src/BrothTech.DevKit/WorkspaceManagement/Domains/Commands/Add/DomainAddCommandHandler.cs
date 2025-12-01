@@ -79,17 +79,26 @@ public class DomainAddCommandHandler(
     {
         yield return [.. GetProjectAddCommandArgs(commandResult)];
 
-        if (commandResult.NoSharedProject is true)
-            yield return [.. GetProjectAddCommandArgs(commandResult, ".Shared", ProjectExposureType.Shared)];
+        if (commandResult.NoSharedProject is false)
+            yield return [.. GetProjectAddCommandArgs(
+                commandResult: commandResult, 
+                projectNameSuffix: ".Shared", 
+                exposureType: ProjectExposureType.Shared,
+                template: DotNetProjectTemplate.ClassLib)];
 
-        if (commandResult.NoSandboxProject is true)
-            yield return [.. GetProjectAddCommandArgs(commandResult, ".Sandbox", ProjectExposureType.Sandbox)];
+        if (commandResult.NoSandboxProject is false)
+            yield return [.. GetProjectAddCommandArgs(
+                commandResult: commandResult, 
+                projectNameSuffix: ".Sandbox", 
+                exposureType: ProjectExposureType.Sandbox,
+                template: DotNetProjectTemplate.Console)];
     }
 
     private IEnumerable<string> GetProjectAddCommandArgs(
         DomainAddCommandResult commandResult,
         string? projectNameSuffix = null,
-        ProjectExposureType? exposureType = null)
+        ProjectExposureType? exposureType = null,
+        DotNetProjectTemplate? template = null)
     {
         yield return nameof(ProjectCommand);
         yield return nameof(ProjectAddCommand);
@@ -104,10 +113,10 @@ public class DomainAddCommandHandler(
             yield return commandResult.WorkspacePath;
         }
 
-        if (commandResult.Template is not null and not DotNetProjectTemplate.None)
+        if ((template ?? commandResult.Template) is { } templateValue and not DotNetProjectTemplate.None)
         {
             yield return $"--{nameof(ProjectAddCommand.Template)}";
-            yield return commandResult.Template.Value.ToString();
+            yield return templateValue.ToString();
         }
     }
 }

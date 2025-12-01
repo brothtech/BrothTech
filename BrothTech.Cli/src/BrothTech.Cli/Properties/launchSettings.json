@@ -2,7 +2,7 @@
   "profiles": {
     "BrothTech.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "workspace init TestWorkspace Endpoint --workspace C:\\Users\\Ben\\source\\repos\\brothtech\\BrothTech\\Test --template ClassLib --noshared"
+      "commandLineArgs": "domain add FuckYou Public --workspace C:\\Users\\Ben\\source\\repos\\brothtech\\BrothTech\\Test --template ClassLib --parent TestWorkspace"
     }
   }
 }
