@@ -8,12 +8,6 @@ namespace BrothTech.DevKit.WorkspaceManagement.Services;
 public interface IWorkspaceManagementService
 {
     Result<string> TryGetWorkspaceRootPath();
-
-    Task<Result> TryAddDomainAsync(
-        string domainName,
-        DotNetProjectTemplate template,
-        string? workspaceRootPath = null,
-        CancellationToken token = default);
 }
 
 public class WorkspaceManagementService(
@@ -33,58 +27,6 @@ public class WorkspaceManagementService(
             return ErrorResult.FromErrorMessages("Unexpected error finding root directory.");
 
         return file.Directory.FullName;
-    }
-
-    public async Task<Result> TryAddDomainAsync(
-        string domainName,
-        DotNetProjectTemplate template,
-        string? workspaceRootPath = null,
-        CancellationToken token = default)
-    {
-        if (workspaceRootPath is null && TryGetWorkspaceRootPath().HasNoItem(out workspaceRootPath, out var messages))
-            return ErrorResult.FromMessages([.. messages]);
-
-        return await TryCreateDomainSolutionAsync(workspaceRootPath, domainName, token) &&
-               await TryCreateDefaultDomainProjectsAsync(workspaceRootPath, domainName, template, token) &&
-               await TryAddDomainProjectsToDomainSolutionAsync(workspaceRootPath, domainName, token);
-    }
-
-    private async Task<Result> TryCreateDomainSolutionAsync(
-        string workspaceRootPath,
-        string domainName,
-        CancellationToken token)
-    {
-        var path = @$"{workspaceRootPath}\{domainName}";
-        _fileSystemService.EnsureDirectoryExists(path);
-        return await _dotNetService.TryCreateSolutionAsync(domainName, path, token);
-    }
-
-    private async Task<Result> TryCreateDefaultDomainProjectsAsync(
-        string workspaceRootPath,
-        string domainName,
-        DotNetProjectTemplate template,
-        CancellationToken token)
-    {
-        var srcPath = @$"{workspaceRootPath}\{domainName}\src\{domainName}";
-        _fileSystemService.EnsureDirectoryExists(srcPath);
-        return await _dotNetService.TryCreateProject(domainName, template, srcPath, token) &&
-               await _dotNetService.TryCreateProject($"{domainName}.Shared", template, @$"{srcPath}.Shared", token) &&
-               await _dotNetService.TryAddProjectReference(
-                   projectPath: @$"{srcPath}.Shared\{domainName}.Shared.csproj",
-                   referencePath: @$"{srcPath}\{domainName}.csproj",
-                   token: token);
-    }
-
-    private async Task<Result> TryAddDomainProjectsToDomainSolutionAsync(
-        string workspaceRootPath,
-        string domainName,
-        CancellationToken token)
-    {
-        var path = @$"{workspaceRootPath}\{domainName}";
-        return await _dotNetService.TryAddProjectToSolution(
-            solutionPath: @$"{path}\{domainName}.sln",
-            projectPath: @$"{path}\src\{domainName}\{domainName}.csproj",
-            token);
     }
 }
 
@@ -140,20 +82,20 @@ public static class ProjectExposureTypeExtentions
             },
             ProjectExposureType.Public => target switch
             {
-                ProjectExposureType.Internal => relationType is DomainRelationType.Descendent,
-                ProjectExposureType.Public => relationType is DomainRelationType.Descendent,
+                ProjectExposureType.Internal => relationType is DomainRelationType.Ancestor,
+                ProjectExposureType.Public => relationType is DomainRelationType.Ancestor,
                 ProjectExposureType.Endpoint => true,
-                ProjectExposureType.Sandbox => relationType is DomainRelationType.Descendent or
+                ProjectExposureType.Sandbox => relationType is DomainRelationType.Ancestor or
                                                                DomainRelationType.IntraDomainSibling,
                 _ => false
             },
             ProjectExposureType.Shared => target switch
             {
-                ProjectExposureType.Internal => relationType is not DomainRelationType.Ancestor,
-                ProjectExposureType.Public => relationType is not DomainRelationType.Ancestor,
-                ProjectExposureType.Shared => relationType is DomainRelationType.Descendent,
+                ProjectExposureType.Internal => relationType is not DomainRelationType.Descendent,
+                ProjectExposureType.Public => relationType is not DomainRelationType.Descendent,
+                ProjectExposureType.Shared => relationType is DomainRelationType.Ancestor,
                 ProjectExposureType.Endpoint => true,
-                ProjectExposureType.Sandbox => relationType is DomainRelationType.Descendent or
+                ProjectExposureType.Sandbox => relationType is DomainRelationType.Ancestor or
                                                                DomainRelationType.IntraDomainSibling,
                 _ => false
             },
@@ -171,34 +113,36 @@ public static class ProjectExposureTypeExtentions
             ProjectExposureType.Internal => target switch
             {
                 ProjectExposureType.Shared => relationType is not DomainRelationType.Descendent,
-                ProjectExposureType.Public => relationType is DomainRelationType.Ancestor,
+                ProjectExposureType.Public => relationType is DomainRelationType.Descendent,
                 _ => false
             },
             ProjectExposureType.Public => target switch
             {
                 ProjectExposureType.Internal => relationType is DomainRelationType.IntraDomainSibling,
-                ProjectExposureType.Shared => relationType is not DomainRelationType.Descendent,
+                ProjectExposureType.Public => relationType is DomainRelationType.Descendent,
+                ProjectExposureType.Shared => relationType is not DomainRelationType.Ancestor,
                 _ => false
             },
             ProjectExposureType.Shared => target switch
             {
-                ProjectExposureType.Shared => relationType is DomainRelationType.Ancestor,
+                ProjectExposureType.Shared => relationType is DomainRelationType.Descendent,
                 _ => false
             },
             ProjectExposureType.Endpoint => target switch
             {
-                ProjectExposureType.Public => relationType is not DomainRelationType.Descendent,
-                ProjectExposureType.Shared => relationType is not DomainRelationType.Descendent,
+                ProjectExposureType.Internal => relationType is DomainRelationType.IntraDomainSibling,
+                ProjectExposureType.Public => relationType is not DomainRelationType.Ancestor,
+                ProjectExposureType.Shared => relationType is not DomainRelationType.Ancestor,
                 _ => false
             },
             ProjectExposureType.Sandbox => target switch
             {
                 ProjectExposureType.Internal => relationType is DomainRelationType.IntraDomainSibling or
-                                                                DomainRelationType.Ancestor,
+                                                                DomainRelationType.Descendent,
                 ProjectExposureType.Public => relationType is DomainRelationType.IntraDomainSibling or
-                                                              DomainRelationType.Ancestor,
+                                                              DomainRelationType.Descendent,
                 ProjectExposureType.Shared => relationType is DomainRelationType.IntraDomainSibling or
-                                                              DomainRelationType.Ancestor,
+                                                              DomainRelationType.Descendent,
                 _ => false
             },
             _ => false

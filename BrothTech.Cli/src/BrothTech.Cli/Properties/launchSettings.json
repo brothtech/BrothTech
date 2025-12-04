@@ -2,7 +2,7 @@
   "profiles": {
     "BrothTech.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "domain add FuckYou Public --workspace C:\\Users\\Ben\\source\\repos\\brothtech\\BrothTech\\Test --template ClassLib --parent TestWorkspace"
+      "commandLineArgs": "batch \"workspace init BrothTech Public --workspace C:\\Users\\Ben\\source\\repos\\brothtech\\BrothTech\\Test --template ClassLib\" \"domain add BrothTech.Cli Public --workspace C:\\Users\\Ben\\source\\repos\\brothtech\\BrothTech\\Test --template Console --parent BrothTech\" \"domain add BrothTech.Workspaces Public --workspace C:\\Users\\Ben\\source\\repos\\brothtech\\BrothTech\\Test --template ClassLib --parent BrothTech\""
     }
   }
 }

@@ -17,6 +17,7 @@ public interface IDotNetService
     Task<Result> TryAddProjectToSolution(
         string solutionPath,
         string projectPath,
+        string solutionFolder,
         CancellationToken token);
 
     Task<Result> TryCreateProject(
@@ -55,9 +56,11 @@ public class DotNetService(
             "-o",
             path);
     }
+
     public Task<Result> TryAddProjectToSolution(
         string solutionPath, 
         string projectPath,
+        string solutionFolder,
         CancellationToken token)
     {
         return _processRunner.TryRunAsync(
@@ -66,7 +69,9 @@ public class DotNetService(
             "sln",
             solutionPath,
             "add",
-            projectPath);
+            projectPath,
+            "-s",
+            solutionFolder);
     }
 
     public Task<Result> TryCreateProject(

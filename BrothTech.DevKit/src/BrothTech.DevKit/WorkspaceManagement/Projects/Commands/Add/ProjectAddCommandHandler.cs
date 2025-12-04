@@ -5,6 +5,7 @@ using BrothTech.DevKit.Infrastructure.Files;
 using BrothTech.DevKit.WorkspaceManagement.Services;
 using BrothTech.DevKit.WorkspaceManagement.Workspaces.Services;
 using BrothTech.Infrastructure.DependencyInjection;
+using System.Text;
 
 namespace BrothTech.DevKit.WorkspaceManagement.Projects.Commands.Add;
 
@@ -85,8 +86,26 @@ public class ProjectAddCommandHandler(
         var rootSolutionPath = @$"{workspacePath}\{workspace.Name}.Root.sln";
         var domainSolutionPath = @$"{workspacePath}\{project.DomainName}\{project.DomainName}.sln";
         var projectPath = @$"{workspacePath}\{project.DomainName}\src\{project.Name}\{project.Name}.csproj";
-        return await _dotNetService.TryAddProjectToSolution(rootSolutionPath, projectPath, token) &&
-               await _dotNetService.TryAddProjectToSolution(domainSolutionPath, projectPath, token);
+        var solutionFolder = GetSolutionFolder(workspace, project);
+        return await _dotNetService.TryAddProjectToSolution(rootSolutionPath, projectPath, solutionFolder, token) &&
+               await _dotNetService.TryAddProjectToSolution(domainSolutionPath, projectPath, "src", token);
+    }
+
+    private string GetSolutionFolder(
+        WorkspaceInfo workspace,
+        ProjectInfo project)
+    {
+        var domain = workspace.Domains.First(x => x.Name == project.DomainName);
+        var domainNames = new List<string> { domain.Name };
+        while (domain.ParentDomainName is not null)
+        {
+            domainNames.Add(domain.ParentDomainName);
+            domain = workspace.Domains.First(x => x.Name == domain.ParentDomainName);
+        }
+        
+        domainNames.Add("src");
+        domainNames.Reverse();
+        return string.Join('\\', domainNames);
     }
 
     private async Task<Result> TryAddProjectReferencesAsync(
@@ -175,26 +194,17 @@ public class ProjectAddCommandHandler(
         DomainRelationType relationType,
         CancellationToken token)
     {
-        if (project.ExposureType.CanDependOn(targetProject.ExposureType, relationType))
-            return await TryAddProjectReferencesAsync(workspacePath, project, targetProject, token);
-
-        if (project.ExposureType.IsVisibleTo(targetProject.ExposureType, relationType))
-            return await TryAddProjectReferencesAsync(workspacePath, targetProject, project, token);
-
-        return Result.Success;
-    }
-
-    private async Task<Result> TryAddProjectReferencesAsync(
-        string workspacePath,
-        ProjectInfo project,
-        ProjectInfo targetProject,
-        CancellationToken token)
-    {
         var projectPath = @$"{workspacePath}\{project.DomainName}\src\{project.Name}\{project.Name}.csproj";
         var targetProjectPath = @$"{workspacePath}\{targetProject.DomainName}\src\{targetProject.Name}\{targetProject.Name}.csproj";
-        var targetSolutionPath = @$"{workspacePath}\{targetProject.DomainName}\{targetProject.DomainName}.sln";
-        return await _dotNetService.TryAddProjectReference(projectPath, targetProjectPath, token) &&
-               await _dotNetService.TryAddProjectToSolution(targetSolutionPath, projectPath, token);
+
+        var aggregateResult = Result.Success;
+        if (project.ExposureType.CanDependOn(targetProject.ExposureType, relationType))
+            aggregateResult &= await _dotNetService.TryAddProjectReference(projectPath, targetProjectPath, token);
+
+        if (aggregateResult.IsSuccessful && project.ExposureType.IsVisibleTo(targetProject.ExposureType, relationType))
+            aggregateResult &= await _dotNetService.TryAddProjectReference(targetProjectPath, projectPath, token);
+
+        return aggregateResult;
     }
 
     public bool ShouldInvokeNewCommands(

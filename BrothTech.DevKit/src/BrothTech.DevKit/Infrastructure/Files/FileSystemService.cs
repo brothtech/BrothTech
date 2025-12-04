@@ -42,6 +42,8 @@ public interface IFileSystemService
 public class FileSystemService :
     IFileSystemService
 {
+    private static readonly Lazy<JsonSerializerOptions> _jsonSerializerOptions = new(() => new() { WriteIndented = true });
+
     public void EnsureDirectoryExists(
         string path)
     {
@@ -212,6 +214,6 @@ public class FileSystemService :
         FileStream stream,
         T value)
     {
-        JsonSerializer.Serialize(stream, value);
+        JsonSerializer.Serialize(stream, value, _jsonSerializerOptions.Value);
     }
 }
