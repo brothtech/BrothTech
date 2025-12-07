@@ -1,4 +1,5 @@
-﻿using System.CommandLine;
+﻿using BrothTech.Cli.Shared.CliCommands;
+using System.CommandLine;
 
 namespace BrothTech.Cli.Shared.Contracts;
 
@@ -11,5 +12,5 @@ public interface ICommandResult<TCommand> :
 
 public interface ICommandResult
 {
-    ParseResult ParseResult { get; set; }
+    MutableParseResult ParseResult { get; set; }
 }

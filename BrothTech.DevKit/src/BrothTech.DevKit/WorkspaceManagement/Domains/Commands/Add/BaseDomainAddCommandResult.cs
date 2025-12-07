@@ -9,16 +9,23 @@ public abstract class BaseDomainAddCommandResult<TCommand> :
     where TCommand : BaseDomainAddCommand, new()
 {
     [NotNull]
-    public bool? NoSharedProject 
+    public bool? ShouldAddSharedProject 
     {
-        get => field ??= ParseResult.GetValue(Command.NoSharedProject);
+        get => field ??= ParseResult.GetValue(Command.ShouldAddSharedProject);
         set => field = value ?? throw new ArgumentNullException(nameof(value));
     }
 
     [NotNull]
-    public bool? NoSandboxProject
+    public bool? ShouldAddSandboxProject
     {
-        get => field ??= ParseResult.GetValue(Command.NoSandboxProject);
+        get => field ??= ParseResult.GetValue(Command.ShouldAddSandboxProject);
+        set => field = value ?? throw new ArgumentNullException(nameof(value));
+    }
+
+    [NotNull]
+    public bool? ShouldAddInternalProject
+    {
+        get => field ??= ParseResult.GetValue(Command.ShouldAddInternalProject);
         set => field = value ?? throw new ArgumentNullException(nameof(value));
     }
 }

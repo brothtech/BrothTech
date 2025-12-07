@@ -6,16 +6,19 @@ namespace BrothTech.DevKit.WorkspaceManagement.Domains.Commands.Add;
 public abstract class BaseDomainAddCommand :
     BaseProjectAddCommand
 {
-    public Option<bool> NoSharedProject { get; } = new($"--{nameof(NoSharedProject)}", "--noshared");
+    public Option<bool> ShouldAddSharedProject { get; } = new($"--{nameof(ShouldAddSharedProject)}", "--addshared");
 
-    public Option<bool> NoSandboxProject { get; } = new($"--{nameof(NoSandboxProject)}", "--nosandbox");
+    public Option<bool> ShouldAddSandboxProject { get; } = new($"--{nameof(ShouldAddSandboxProject)}", "--addsandbox");
+
+    public Option<bool> ShouldAddInternalProject { get; } = new($"--{nameof(ShouldAddInternalProject)}", "--addinternal");
 
     public BaseDomainAddCommand(
         string name,
         string? description = null) :
         base(name, description)
     {
-        Add(NoSharedProject);
-        Add(NoSandboxProject);
+        Add(ShouldAddSharedProject);
+        Add(ShouldAddSandboxProject);
+        Add(ShouldAddInternalProject);
     }
 }

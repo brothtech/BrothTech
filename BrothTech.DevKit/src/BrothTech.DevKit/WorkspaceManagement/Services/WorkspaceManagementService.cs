@@ -1,7 +1,9 @@
 ﻿using BrothTech.Contracts.Results;
 using BrothTech.DevKit.Infrastructure.DotNet;
 using BrothTech.DevKit.Infrastructure.Files;
+using BrothTech.DevKit.WorkspaceManagement.Projects.CliCommands.Add;
 using BrothTech.DevKit.WorkspaceManagement.Projects.Commands.Add;
+using System.Text.Json.Serialization;
 
 namespace BrothTech.DevKit.WorkspaceManagement.Services;
 
@@ -43,7 +45,12 @@ public class DomainInfo
     
     public required string Name { get; set; }
 
+    public required string FullyQualifiedName { get; set; }
+
     public ProjectInfo[] Projects { get; set; } = [];
+
+    [JsonIgnore]
+    public WorkspaceInfo? Workspace { get; set; }
 }
 
 public class ProjectInfo
@@ -53,6 +60,9 @@ public class ProjectInfo
     public required string Name { get; set; }
 
     public required ProjectExposureType ExposureType { get; set; }
+
+    [JsonIgnore]
+    public DomainInfo? Domain { get; set; }
 }
 
 public enum ProjectExposureType

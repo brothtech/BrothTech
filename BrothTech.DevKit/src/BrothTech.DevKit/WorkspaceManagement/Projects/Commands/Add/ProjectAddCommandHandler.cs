@@ -2,6 +2,7 @@
 using BrothTech.Contracts.Results;
 using BrothTech.DevKit.Infrastructure.DotNet;
 using BrothTech.DevKit.Infrastructure.Files;
+using BrothTech.DevKit.WorkspaceManagement.Projects.CliCommands.Add;
 using BrothTech.DevKit.WorkspaceManagement.Services;
 using BrothTech.DevKit.WorkspaceManagement.Workspaces.Services;
 using BrothTech.Infrastructure.DependencyInjection;
@@ -218,13 +219,4 @@ public class ProjectAddCommandHandler(
     {
         return [];
     }
-}
-
-public enum DomainRelationType
-{
-    None,
-    Ancestor,
-    Descendent,
-    IntraDomainSibling,
-    InterDomainSibling
 }

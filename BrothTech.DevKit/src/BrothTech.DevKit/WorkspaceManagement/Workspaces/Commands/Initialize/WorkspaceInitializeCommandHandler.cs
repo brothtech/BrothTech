@@ -4,6 +4,7 @@ using BrothTech.DevKit.Infrastructure.DotNet;
 using BrothTech.DevKit.Infrastructure.Files;
 using BrothTech.DevKit.WorkspaceManagement.Domains.Commands;
 using BrothTech.DevKit.WorkspaceManagement.Domains.Commands.Add;
+using BrothTech.DevKit.WorkspaceManagement.Projects.CliCommands.Add;
 using BrothTech.DevKit.WorkspaceManagement.Services;
 using BrothTech.DevKit.WorkspaceManagement.Workspaces.Services;
 using BrothTech.Infrastructure.DependencyInjection;
@@ -67,10 +68,13 @@ public class WorkspaceInitializeCommandHandler(
             yield return commandResult.Template.Value.ToString();
         }
 
-        if (commandResult.NoSharedProject.Value)
-            yield return $"--{nameof(DomainAddCommand.NoSharedProject)}";
+        if (commandResult.ShouldAddSharedProject.Value)
+            yield return $"--{nameof(DomainAddCommand.ShouldAddSharedProject)}";
 
-        if (commandResult.NoSandboxProject.Value)
-            yield return $"--{nameof(DomainAddCommand.NoSandboxProject)}";
+        if (commandResult.ShouldAddSandboxProject.Value)
+            yield return $"--{nameof(DomainAddCommand.ShouldAddSandboxProject)}";
+
+        if (commandResult.ShouldAddInternalProject.Value)
+            yield return $"--{nameof(DomainAddCommand.ShouldAddInternalProject)}";
     }
 }

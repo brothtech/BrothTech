@@ -29,11 +29,29 @@ public class DomainAddCommandHandler(
         DomainAddCommandResult commandResult, 
         CancellationToken token)
     {
-        if (TryGetWorkspacePath(commandResult.WorkspacePath).HasNoItem(out var workspacePath, out var messages))
-            return ErrorResult.FromMessages([.. messages]);
+        var fullyQualifiedName = null as string;
+        return TryGetWorkspacePath(commandResult.WorkspacePath).OutWithItem(out var workspacePath) &&
+               TryGetFullyQualifiedName(commandResult, workspacePath).OutWithItem(out fullyQualifiedName) &&
+               await TryCreateDomainSolutionAsync(workspacePath, fullyQualifiedName!, token) &&
+               TryCreateDomainInfo(workspacePath, commandResult.Name, commandResult.ParentDomainName, fullyQualifiedName!);
+    }
 
-        return await TryCreateDomainSolutionAsync(workspacePath, commandResult.Name, token) &&
-               TryCreateDomainInfo(workspacePath, commandResult.Name, commandResult.ParentDomainName);
+    private Result<string> TryGetFullyQualifiedName(
+        DomainAddCommandResult commandResult,
+        string workspacePath)
+    {
+        if (commandResult.FullyQualifiedName is null)
+            return ErrorResult.Failure;
+
+        if (commandResult.ParentDomainName is null)
+            return commandResult.FullyQualifiedName = commandResult.Name;
+
+        var result = _workspaceInfoService.TryGetWorkspaceInfo(workspacePath);
+        if (result.HasItem(out var workspace, out var messages) is false)
+            return ErrorResult.FromMessages(messages);
+
+        var domain = workspace.Domains.First(x => x.Name == commandResult.ParentDomainName);
+        return commandResult.FullyQualifiedName = $"{domain.FullyQualifiedName}.{commandResult.Name}";
     }
 
     private Result<string> TryGetWorkspacePath(
@@ -47,23 +65,25 @@ public class DomainAddCommandHandler(
 
     private async Task<Result> TryCreateDomainSolutionAsync(
         string workspacePath,
-        string domainName,
+        string fullyQualifiedName,
         CancellationToken token)
     {
-        var path = @$"{workspacePath}\{domainName}";
+        var path = @$"{workspacePath}\{fullyQualifiedName}";
         _fileSystemService.EnsureDirectoryExists(path);
-        return await _dotNetService.TryCreateSolutionAsync(domainName, path, token);
+        return await _dotNetService.TryCreateSolutionAsync(fullyQualifiedName, path, token);
     }
 
     private Result TryCreateDomainInfo(
         string workspacePath,
         string domainName,
-        string? parentDomainName)
+        string? parentDomainName,
+        string fullyQualifiedName)
     {
         var domain = new DomainInfo
         {
             ParentDomainName = parentDomainName,
-            Name = domainName
+            Name = domainName,
+            FullyQualifiedName = fullyQualifiedName
         };
         return _workspaceInfoService.TryAddDomainInfo(workspacePath, domain);
     }
@@ -79,19 +99,26 @@ public class DomainAddCommandHandler(
     {
         yield return [.. GetProjectAddCommandArgs(commandResult)];
 
-        if (commandResult.NoSharedProject is false)
+        if (commandResult.ShouldAddSharedProject is true)
             yield return [.. GetProjectAddCommandArgs(
                 commandResult: commandResult, 
                 projectNameSuffix: ".Shared", 
                 exposureType: ProjectExposureType.Shared,
                 template: DotNetProjectTemplate.ClassLib)];
 
-        if (commandResult.NoSandboxProject is false)
+        if (commandResult.ShouldAddSandboxProject is true)
             yield return [.. GetProjectAddCommandArgs(
                 commandResult: commandResult, 
                 projectNameSuffix: ".Sandbox", 
                 exposureType: ProjectExposureType.Sandbox,
                 template: DotNetProjectTemplate.Console)];
+
+        if (commandResult.ShouldAddInternalProject is true)
+            yield return [.. GetProjectAddCommandArgs(
+                commandResult: commandResult,
+                projectNameSuffix: ".Internal",
+                exposureType: ProjectExposureType.Internal,
+                template: DotNetProjectTemplate.ClassLib)];
     }
 
     private IEnumerable<string> GetProjectAddCommandArgs(
@@ -117,6 +144,12 @@ public class DomainAddCommandHandler(
         {
             yield return $"--{nameof(ProjectAddCommand.Template)}";
             yield return templateValue.ToString();
+        }
+
+        if (commandResult.FullyQualifiedName.IsNullOrWhiteSpace() is false)
+        {
+            yield return $"--{nameof(ProjectAddCommand.FullyQualifiedName)}";
+            yield return commandResult.FullyQualifiedName;
         }
     }
 }

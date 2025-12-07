@@ -1,4 +1,5 @@
 ﻿using BrothTech.Cli.Commands.Services;
+using BrothTech.Cli.Shared.CliCommands;
 using BrothTech.Cli.Shared.Contracts;
 using BrothTech.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,11 +11,11 @@ public class CliServicesRegistration :
 {
     protected override Type MarkerType => typeof(CliMarker);
 
-    protected override bool ShouldRegisterService(
+    protected override bool ShouldRegisterScannedService(
         Type type)
     {
-        return type.IsAssignableTo(typeof(ICommandHandler)) ||
-               type.IsAssignableTo(typeof(ICommandBuilder));
+        return type.IsAssignableTo(typeof(ICliCommandHandler)) ||
+               type.IsAssignableTo(typeof(ICliCommandBuilder));
     }
 
     protected override void RegisterAdditionalServices(

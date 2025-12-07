@@ -1,5 +1,5 @@
-﻿using BrothTech.Cli.Commands.Root;
-using BrothTech.Cli.Shared.Commands.Root;
+﻿using BrothTech.Cli.CliCommands.Root;
+using BrothTech.Cli.Shared.CliCommands.Root;
 using BrothTech.Cli.Shared.Contracts;
 using BrothTech.Contracts.Results;
 using Microsoft.Extensions.Caching.Memory;
@@ -8,12 +8,10 @@ using Microsoft.Extensions.Logging;
 namespace BrothTech.Cli.Commands.Services;
 
 public class CliCommandInvoker(
-    IMemoryCache memoryCache,
-    ILogger<CliCommandInvoker> logger) :
+    IMemoryCache memoryCache) :
     ICliCommandInvoker
 {
     private readonly IMemoryCache _memoryCache = memoryCache.EnsureNotNull();
-    private readonly ILogger<CliCommandInvoker> _logger = logger.EnsureNotNull();
 
     public async Task<Result> TryInvokeAsync(
         string[] args,

@@ -1,6 +1,8 @@
-﻿using BrothTech.DevKit.Infrastructure.DotNet;
+﻿using BrothTech.Cli.Shared.Commands;
+using BrothTech.DevKit.Infrastructure.DotNet;
 using BrothTech.DevKit.WorkspaceManagement.Services;
 using System.CommandLine;
+using System.Windows.Input;
 
 namespace BrothTech.DevKit.WorkspaceManagement.Projects.Commands.Add;
 
@@ -17,6 +19,8 @@ public abstract class BaseProjectAddCommand :
 
     public Option<DotNetProjectTemplate> Template { get; } = new($"--{nameof(Template)}", "-t", "--template");
 
+    public Option<string> FullyQualifiedName { get; } = new($"--{nameof(FullyQualifiedName)}", "-qn", "--qualifiedname");
+
     public BaseProjectAddCommand(
         string name,
         string? description = null) :
@@ -27,5 +31,7 @@ public abstract class BaseProjectAddCommand :
         Add(WorkspacePath);
         Add(DomainName);
         Add(Template);
+        Add(FullyQualifiedName);
     }
 }
+

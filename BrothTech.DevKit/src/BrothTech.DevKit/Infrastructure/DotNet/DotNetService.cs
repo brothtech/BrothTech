@@ -3,6 +3,7 @@ using BrothTech.DevKit.Infrastructure.Files;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace BrothTech.DevKit.Infrastructure.DotNet;
@@ -11,7 +12,7 @@ public interface IDotNetService
 {
     Task<Result> TryCreateSolutionAsync(
         string name,
-        string path,
+        string directory,
         CancellationToken token);
 
     Task<Result> TryAddProjectToSolution(
@@ -23,13 +24,18 @@ public interface IDotNetService
     Task<Result> TryCreateProject(
         string name,
         DotNetProjectTemplate template,
-        string path,
+        string directory,
         CancellationToken token);
 
     Task<Result> TryAddProjectReference(
         string projectPath,
         string referencePath,
         CancellationToken token);
+
+    Task<Result> TrySetPropertiesAsync(
+        string projectPath,
+        CancellationToken token,
+        params DotNetProjectProperty[] propertyGroups);
 }
 
 public class DotNetService(
@@ -42,10 +48,10 @@ public class DotNetService(
     
     public Task<Result> TryCreateSolutionAsync(
         string name,
-        string path,
+        string directory,
         CancellationToken token)
     {
-        _fileSystemService.EnsureDirectoryExists(path);
+        _fileSystemService.EnsureDirectoryExists(directory);
         return _processRunner.TryRunAsync(
             fileName: "dotnet",
             token: token,
@@ -54,7 +60,7 @@ public class DotNetService(
             "-n",
             name,
             "-o",
-            path);
+            directory);
     }
 
     public Task<Result> TryAddProjectToSolution(
@@ -77,10 +83,10 @@ public class DotNetService(
     public Task<Result> TryCreateProject(
         string name,
         DotNetProjectTemplate template,
-        string path,
+        string directory,
         CancellationToken token)
     {
-        _fileSystemService.EnsureDirectoryExists(path);
+        _fileSystemService.EnsureDirectoryExists(directory);
         return _processRunner.TryRunAsync(
             fileName: "dotnet",
             token: token,
@@ -89,7 +95,7 @@ public class DotNetService(
             "-n",
             name,
             "-o",
-            path,
+            directory,
             "-f",
             "net10.0");
     }
@@ -107,7 +113,33 @@ public class DotNetService(
             "reference",
             referencePath);
     }
+
+    public async Task<Result> TrySetPropertiesAsync(
+        string projectPath,
+        CancellationToken token,
+        params DotNetProjectProperty[] propertyGroups)
+    {
+        try
+        {
+            using var stream = File.Open(projectPath, FileMode.Open);
+            var document = await XDocument.LoadAsync(stream, LoadOptions.None, token);
+            var root = document.Root.EnsureNotNull();
+            if (root.Element("PropertyGroup") is not { } propertyGroup)
+                root.Add(propertyGroup = new XElement("PropertyGroup"));
+
+            propertyGroup.Add([.. propertyGroups.Select(x => new XElement(x.Name, x.Value))]);
+            stream.SetLength(stream.Position = 0);
+            await document.SaveAsync(stream, SaveOptions.None, token);
+            return Result.Success;
+        }
+        catch (Exception exception)
+        {
+            return exception;
+        }
+    }
 }
+
+public record DotNetProjectProperty(string Name, string Value);
 
 public enum DotNetProjectTemplate
 {

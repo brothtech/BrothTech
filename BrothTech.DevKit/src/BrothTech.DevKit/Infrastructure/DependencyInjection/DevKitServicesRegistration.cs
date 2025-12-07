@@ -1,4 +1,5 @@
-﻿using BrothTech.Cli.Shared.Contracts;
+﻿using BrothTech.Cli.Shared.CliCommands;
+using BrothTech.Cli.Shared.Contracts;
 using BrothTech.DevKit.Infrastructure.DotNet;
 using BrothTech.DevKit.Infrastructure.Files;
 using BrothTech.DevKit.WorkspaceManagement.Services;
@@ -13,11 +14,11 @@ public class DevKitServicesRegistration :
 {
     protected override Type MarkerType => typeof(DevKitMarker);
 
-    protected override bool ShouldRegisterService(
+    protected override bool ShouldRegisterScannedService(
         Type type)
     {
-        return type.IsAssignableTo(typeof(ICommandHandler)) ||
-               type.IsAssignableTo(typeof(ICommandBuilder));
+        return type.IsAssignableTo(typeof(ICliCommandHandler)) ||
+               type.IsAssignableTo(typeof(ICliCommandBuilder));
     }
 
     protected override void RegisterAdditionalServices(

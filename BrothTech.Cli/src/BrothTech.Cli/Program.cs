@@ -1,4 +1,5 @@
 ﻿using BrothTech;
+using BrothTech.Cli.CliCommands.Root;
 using BrothTech.Cli.Commands.Root;
 using BrothTech.Cli.Infrastructure.DependencyInjection;
 using BrothTech.DevKit.Infrastructure.DependencyInjection;
@@ -9,7 +10,7 @@ var entryPoint = new EntryPoint(
     typeof(CliServicesRegistration),
     typeof(DevKitServicesRegistration));
 
-return await entryPoint.RunAsync<RootCommandBuilder, ILogger<Program>>(async (rootCommandBuilder, logger) => 
+return await entryPoint.RunAsync<RootCliCommandBuilder, ILogger<Program>>(async (rootCommandBuilder, logger) => 
 {
     if (rootCommandBuilder.TryBuild().OutWithNoItem(out var rootCommand, out var messages))
     {

@@ -1,7 +1,9 @@
 ﻿using BrothTech.Cli.Shared.Commands;
+using BrothTech.Cli.Shared.Contracts;
 using BrothTech.DevKit.Infrastructure.DotNet;
 using BrothTech.DevKit.WorkspaceManagement.Services;
 using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 
 namespace BrothTech.DevKit.WorkspaceManagement.Projects.Commands.Add;
@@ -38,6 +40,12 @@ public abstract class BaseProjectAddCommandResult<TCommand>() :
     public DotNetProjectTemplate? Template
     {
         get => field ??= ParseResult.GetValue(Command.Template);
+        set => field = value;
+    }
+
+    public string? FullyQualifiedName
+    {
+        get => field ??= ParseResult.GetValue(Command.FullyQualifiedName);
         set => field = value;
     }
 }

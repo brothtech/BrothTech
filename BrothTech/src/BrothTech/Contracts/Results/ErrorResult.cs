@@ -5,6 +5,8 @@ namespace BrothTech.Contracts.Results;
 public class ErrorResult :
     Result
 {
+    public new static readonly ErrorResult Failure = new() { IsSuccessful = false };
+
     private ErrorResult()
     {
     }

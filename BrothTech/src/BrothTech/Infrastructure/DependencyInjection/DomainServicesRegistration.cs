@@ -63,11 +63,11 @@ public abstract class DomainServicesRegistration
             .Where(x => x.GetName()?.Name?.StartsWith(@namespace) ?? false)
             .SelectMany(x => x.GetTypes())
             .Concat(MarkerType.Assembly.GetTypes())
-            .Where(ShouldRegisterService)
+            .Where(ShouldRegisterScannedService)
             .Where(x => x.IsDefined(typeof(ServiceDescriptorAttribute), true)).ToList();
     }
 
-    protected abstract bool ShouldRegisterService(
+    protected abstract bool ShouldRegisterScannedService(
         Type type);
 
     protected virtual void RegisterAdditionalServices(
