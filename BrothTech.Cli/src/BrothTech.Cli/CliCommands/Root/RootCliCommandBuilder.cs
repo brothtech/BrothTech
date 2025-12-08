@@ -12,12 +12,14 @@ namespace BrothTech.Cli.CliCommands.Root;
 public class RootCliCommandBuilder(
     ILogger<RootCliCommandBuilder> logger,
     IEnumerable<ICliCommandBuilder<RootCliCommand>> builders,
+    IEnumerable<ICliCommandValidator<RootCliCommand, RootCliCommandResult>> validators,
     IEnumerable<ICliCommandHandler<RootCliCommand, RootCliCommandResult>> handlers,
     ICliCommandInvoker commandInvoker,
     IMemoryCache memoryCache) :
     CliCommandBuilder<RootCliCommand, RootCliCommand, RootCliCommandResult, RootCliCommandResult>(
         logger, 
         builders, 
+        validators,
         handlers,
         commandInvoker)
 {

@@ -9,10 +9,12 @@ namespace BrothTech.DevKit.WorkspaceManagement.Workspaces.CliCommands.Initialize
 public class WorkspaceInitializeCliCommandBuilder(
     ILogger<WorkspaceInitializeCliCommandBuilder> logger,
     IEnumerable<ICliCommandBuilder<WorkspaceInitializeCliCommand>> builders,
+    IEnumerable<ICliCommandValidator<WorkspaceInitializeCliCommand, IWorkspaceInitializeCliCommandResult>> validators,
     IEnumerable<ICliCommandHandler<WorkspaceInitializeCliCommand, IWorkspaceInitializeCliCommandResult>> handlers,
     ICliCommandInvoker CliCommandInvoker) :
     CliCommandBuilder<WorkspaceCliCommand, WorkspaceInitializeCliCommand, WorkspaceInitializeCliCommandResult, IWorkspaceInitializeCliCommandResult>(
         logger, 
         builders, 
+        validators,
         handlers, 
         CliCommandInvoker);

@@ -10,10 +10,12 @@ namespace BrothTech.DevKit.WorkspaceManagement.Domains.CliCommands;
 public class DomainCliCommandBuilder(
     ILogger<DomainCliCommandBuilder> logger,
     IEnumerable<ICliCommandBuilder<DomainCliCommand>> builders,
+    IEnumerable<ICliCommandValidator<DomainCliCommand, DomainCliCommandResult>> validators,
     IEnumerable<ICliCommandHandler<DomainCliCommand, DomainCliCommandResult>> handlers,
     ICliCommandInvoker commandInvoker) :
     CliCommandBuilder<RootCliCommand, DomainCliCommand, DomainCliCommandResult, DomainCliCommandResult>(
         logger,
         builders,
+        validators,
         handlers,
         commandInvoker);

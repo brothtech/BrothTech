@@ -2,7 +2,7 @@
   "profiles": {
     "BrothTech.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "batch -s C:\\Users\\Ben\\source\\repos\\brothtech\\BrothTech\\batches"
+      "commandLineArgs": "batch -s C:\\Users\\BenjaminRothman\\source\\repos\\brothtech\\BrothTech\\batches"
     }
   }
 }

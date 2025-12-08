@@ -10,10 +10,12 @@ namespace BrothTech.DevKit.WorkspaceManagement.Projects.CliCommands;
 public class ProjectCliCommandBuilder(
     ILogger<ProjectCliCommandBuilder> logger,
     IEnumerable<ICliCommandBuilder<ProjectCliCommand>> builders,
+    IEnumerable<ICliCommandValidator<ProjectCliCommand, ProjectCliCommandResult>> validators,
     IEnumerable<ICliCommandHandler<ProjectCliCommand, ProjectCliCommandResult>> handlers,
     ICliCommandInvoker commandInvoker) :
     CliCommandBuilder<RootCliCommand, ProjectCliCommand, ProjectCliCommandResult, ProjectCliCommandResult>(
         logger,
         builders,
+        validators,
         handlers,
         commandInvoker);

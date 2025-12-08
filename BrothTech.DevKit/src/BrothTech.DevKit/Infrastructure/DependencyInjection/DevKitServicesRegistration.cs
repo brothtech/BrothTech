@@ -18,7 +18,8 @@ public class DevKitServicesRegistration :
         Type type)
     {
         return type.IsAssignableTo(typeof(ICliCommandHandler)) ||
-               type.IsAssignableTo(typeof(ICliCommandBuilder));
+               type.IsAssignableTo(typeof(ICliCommandBuilder)) ||
+               type.IsAssignableTo(typeof(ICliCommandValidator));
     }
 
     protected override void RegisterAdditionalServices(

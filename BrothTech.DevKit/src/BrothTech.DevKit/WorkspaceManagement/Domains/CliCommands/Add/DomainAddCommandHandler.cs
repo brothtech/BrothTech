@@ -33,7 +33,7 @@ public class DomainAddCliCommandHandler(
         return TryGetWorkspacePath(commandResult).OutWithItem(out var workspacePath) &&
                TryGetFullyQualifiedName(commandResult, workspacePath).OutWithItem(out fullyQualifiedName) &&
                await TryCreateDomainSolutionAsync(workspacePath, fullyQualifiedName!, token) &&
-               TryCreateDomainInfo(workspacePath, commandResult.Name, commandResult.ParentDomainName, fullyQualifiedName!);
+               TryCreateDomainInfo(workspacePath, commandResult, fullyQualifiedName!);
     }
 
     private Result<string> TryGetFullyQualifiedName(
@@ -78,15 +78,15 @@ public class DomainAddCliCommandHandler(
 
     private Result TryCreateDomainInfo(
         string workspacePath,
-        string domainName,
-        string? parentDomainName,
+        IDomainAddCliCommandResult commandResult,
         string fullyQualifiedName)
     {
         var domain = new DomainInfo
         {
-            ParentDomainName = parentDomainName,
-            Name = domainName,
-            FullyQualifiedName = fullyQualifiedName
+            ParentDomainName = commandResult.ParentDomainName,
+            Name = commandResult.Name,
+            FullyQualifiedName = fullyQualifiedName,
+            DomainReferences = commandResult.DomainReferences
         };
         return _workspaceInfoService.TryAddDomainInfo(workspacePath, domain);
     }

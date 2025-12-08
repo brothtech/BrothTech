@@ -158,7 +158,7 @@ public class ProjectAddCliCommandHandler(
             return DomainRelationType.IntraDomainSibling;
 
         if (domain.ParentDomainName == targetDomain.ParentDomainName)
-            return DomainRelationType.InterDomainSibling;
+            return GetInterDomainRelationType(domain, targetDomain);
 
         if (IsDescendentDomain(workspace, domain, targetDomain))
             return DomainRelationType.Descendent;
@@ -167,6 +167,19 @@ public class ProjectAddCliCommandHandler(
             return DomainRelationType.Ancestor;
 
         return DomainRelationType.None;
+    }
+
+    private DomainRelationType GetInterDomainRelationType(
+        DomainInfo domain,
+        DomainInfo targetDomain)
+    {
+        if (domain.DomainReferences.Any(x => x == targetDomain.Name))
+            return DomainRelationType.InterDomainReferencer;
+
+        if (targetDomain.DomainReferences.Any(x => x == domain.Name))
+            return DomainRelationType.InterDomainReferencee;
+
+        return DomainRelationType.InterDomainSibling;
     }
 
     private bool IsDescendentDomain(
@@ -218,13 +231,22 @@ public class ProjectAddCliCommandHandler(
         var targetProjectPath = GetProjectPath(workspacePath, targetProject);
 
         var aggregateResult = Result.Success;
-        if (project.ExposureType.CanDependOn(targetProject.ExposureType, relationType))
+        if (ShouldAddProjectFromReferencedDomain(project, targetProject) ||
+            project.ExposureType.CanDependOn(targetProject.ExposureType, relationType))
             aggregateResult &= await _dotNetService.TryAddProjectReference(projectPath, targetProjectPath, token);
 
         if (aggregateResult.IsSuccessful && project.ExposureType.IsVisibleTo(targetProject.ExposureType, relationType))
             aggregateResult &= await _dotNetService.TryAddProjectReference(targetProjectPath, projectPath, token);
 
         return aggregateResult;
+    }
+
+    private bool ShouldAddProjectFromReferencedDomain(
+        ProjectInfo project,
+        ProjectInfo targetProject)
+    {
+        return project.Domain?.DomainReferences.Any(x => x == targetProject.DomainName) is true &&
+               targetProject.ExposureType is not ProjectExposureType.Internal;
     }
 
     private string GetSolutionDirectory(
@@ -286,11 +308,14 @@ public class ProjectAddCliCommandHandler(
     }
 }
 
+[Flags]
 public enum DomainRelationType
 {
-    None,
+    None = 0,
     Ancestor,
     Descendent,
     IntraDomainSibling,
-    InterDomainSibling
+    InterDomainSibling,
+    InterDomainReferencer,
+    InterDomainReferencee
 }

@@ -17,6 +17,7 @@ public interface ICliCommandBuilder
 public abstract class CliCommandBuilder<TParentCommand, TCommand, TCommandResultConcrete, TCommandResultContract>(
     ILogger logger,
     IEnumerable<ICliCommandBuilder<TCommand>> childBuilders,
+    IEnumerable<ICliCommandValidator<TCommand, TCommandResultContract>> validators,
     IEnumerable<ICliCommandHandler<TCommand, TCommandResultContract>> handlers,
     ICliCommandInvoker commandInvoker) :
     ICliCommandBuilder<TParentCommand>
@@ -27,6 +28,7 @@ public abstract class CliCommandBuilder<TParentCommand, TCommand, TCommandResult
 {
     private readonly ILogger _logger = logger.EnsureNotNull();
     private readonly IEnumerable<ICliCommandBuilder<TCommand>> _childBuilders = childBuilders.EnsureNotNull();
+    private readonly IEnumerable<ICliCommandValidator<TCommand, TCommandResultContract>> _validators = validators.EnsureNotNull();
     private readonly IEnumerable<ICliCommandHandler<TCommand, TCommandResultContract>> _handlers = handlers.EnsureNotNull();
     private readonly ICliCommandInvoker _commandInvoker = commandInvoker.EnsureNotNull();
     private TCommand? _command;
@@ -71,12 +73,28 @@ public abstract class CliCommandBuilder<TParentCommand, TCommand, TCommandResult
             Command = command,
             ParseResult = parseResult
         };
-        var result = await TryHandleAsync(commandResult, token);
+        var result = await IsValidAsync(commandResult, token) &&
+                     await TryHandleAsync(commandResult, token);
         if (result.IsSuccessful)
             return;
 
         foreach (var message in result.Messages)
             _logger.Log(message.LogLevel, message.Message, message.Args);
+    }
+
+    private async Task<Result> IsValidAsync(
+        TCommandResultContract commandResult,
+        CancellationToken token)
+    {
+        var aggregateResult = Result.Success;
+        foreach (var validator in _validators)
+        {
+            aggregateResult &= await validator.ValidateAsync(commandResult, token);
+            if (aggregateResult.IsSuccessful is false)
+                return aggregateResult;
+        }
+
+        return aggregateResult;
     }
 
     public async Task<Result> TryHandleAsync(

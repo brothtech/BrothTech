@@ -164,15 +164,6 @@ public class Result<TItem> :
     }
 
     public static implicit operator Result<TItem>(
-        bool isSuccessful)
-    {
-        return new Result<TItem>
-        {
-            IsSuccessful = isSuccessful
-        };
-    }
-
-    public static implicit operator Result<TItem>(
         ErrorResult result)
     {
         return new Result<TItem> 
@@ -341,15 +332,6 @@ public class Result
         {
             IsSuccessful = false,
             Messages = messages
-        };
-    }
-
-    public static implicit operator Result(
-        bool isSuccessful)
-    {
-        return new Result
-        {
-            IsSuccessful = isSuccessful
         };
     }
 

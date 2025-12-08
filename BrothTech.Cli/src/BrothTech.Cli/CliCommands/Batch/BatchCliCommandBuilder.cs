@@ -11,10 +11,12 @@ namespace BrothTech.Cli.CliCommands.Batch;
 public class BatchCliCommandBuilder(
     ILogger<BatchCliCommandBuilder> logger,
     IEnumerable<ICliCommandBuilder<BatchCliCommand>> builders,
+    IEnumerable<ICliCommandValidator<BatchCliCommand, BatchCliCommandResult>> validators,
     IEnumerable<ICliCommandHandler<BatchCliCommand, BatchCliCommandResult>> handlers,
     ICliCommandInvoker commandInvoker) :
     CliCommandBuilder<RootCliCommand, BatchCliCommand, BatchCliCommandResult, BatchCliCommandResult>(
         logger, 
         builders, 
+        validators,
         handlers, 
         commandInvoker);

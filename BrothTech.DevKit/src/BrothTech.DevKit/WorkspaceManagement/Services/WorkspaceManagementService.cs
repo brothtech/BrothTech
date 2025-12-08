@@ -49,6 +49,8 @@ public class DomainInfo
 
     public ProjectInfo[] Projects { get; set; } = [];
 
+    public string[] DomainReferences { get; set; } = [];
+
     [JsonIgnore]
     public WorkspaceInfo? Workspace { get; set; }
 }
@@ -92,25 +94,33 @@ public static class ProjectExposureTypeExtentions
             {
                 ProjectExposureType.Internal => relationType is DomainRelationType.IntraDomainSibling,
                 ProjectExposureType.Public => relationType is DomainRelationType.IntraDomainSibling,
+                ProjectExposureType.Sandbox => relationType is DomainRelationType.IntraDomainSibling,
                 _ => false
             },
             ProjectExposureType.Public => target switch
             {
-                ProjectExposureType.Internal => relationType is DomainRelationType.Ancestor,
-                ProjectExposureType.Public => relationType is DomainRelationType.Ancestor,
+                ProjectExposureType.Internal => relationType is DomainRelationType.Ancestor or
+                                                                DomainRelationType.InterDomainReferencee,
+                ProjectExposureType.Public => relationType is DomainRelationType.Ancestor or
+                                                              DomainRelationType.InterDomainReferencee,
                 ProjectExposureType.Endpoint => true,
                 ProjectExposureType.Sandbox => relationType is DomainRelationType.Ancestor or
-                                                               DomainRelationType.IntraDomainSibling,
+                                                               DomainRelationType.IntraDomainSibling or
+                                                               DomainRelationType.InterDomainReferencee,
                 _ => false
             },
             ProjectExposureType.Shared => target switch
             {
-                ProjectExposureType.Internal => relationType is not DomainRelationType.Descendent,
-                ProjectExposureType.Public => relationType is not DomainRelationType.Descendent,
-                ProjectExposureType.Shared => relationType is DomainRelationType.Ancestor,
+                ProjectExposureType.Internal => relationType is not (DomainRelationType.Descendent or 
+                                                                    DomainRelationType.InterDomainReferencer),
+                ProjectExposureType.Public => relationType is not (DomainRelationType.Descendent or 
+                                                                  DomainRelationType.InterDomainReferencer),
+                ProjectExposureType.Shared => relationType is DomainRelationType.Ancestor or
+                                                              DomainRelationType.InterDomainReferencee,
                 ProjectExposureType.Endpoint => true,
                 ProjectExposureType.Sandbox => relationType is DomainRelationType.Ancestor or
-                                                               DomainRelationType.IntraDomainSibling,
+                                                               DomainRelationType.IntraDomainSibling or
+                                                               DomainRelationType.InterDomainReferencee,
                 _ => false
             },
             _ => false
@@ -126,37 +136,45 @@ public static class ProjectExposureTypeExtentions
         {
             ProjectExposureType.Internal => target switch
             {
-                ProjectExposureType.Shared => relationType is not DomainRelationType.Descendent,
-                ProjectExposureType.Public => relationType is DomainRelationType.Descendent,
+                ProjectExposureType.Shared => relationType is not DomainRelationType.Descendent or 
+                                                                  DomainRelationType.InterDomainReferencee,
+                ProjectExposureType.Public => relationType is DomainRelationType.Descendent or
+                                                              DomainRelationType.InterDomainReferencer,
                 _ => false
             },
             ProjectExposureType.Public => target switch
             {
                 ProjectExposureType.Internal => relationType is DomainRelationType.IntraDomainSibling,
-                ProjectExposureType.Public => relationType is DomainRelationType.Descendent,
-                ProjectExposureType.Shared => relationType is not DomainRelationType.Ancestor,
+                ProjectExposureType.Public => relationType is DomainRelationType.Descendent or 
+                                                              DomainRelationType.InterDomainReferencer,
+                ProjectExposureType.Shared => relationType is not DomainRelationType.Ancestor or
+                                                                  DomainRelationType.InterDomainReferencee,
                 _ => false
             },
             ProjectExposureType.Shared => target switch
             {
-                ProjectExposureType.Shared => relationType is DomainRelationType.Descendent,
+                ProjectExposureType.Shared => relationType is DomainRelationType.Descendent or 
+                                                              DomainRelationType.InterDomainReferencer,
                 _ => false
             },
             ProjectExposureType.Endpoint => target switch
             {
                 ProjectExposureType.Internal => relationType is DomainRelationType.IntraDomainSibling,
-                ProjectExposureType.Public => relationType is not DomainRelationType.Ancestor,
-                ProjectExposureType.Shared => relationType is not DomainRelationType.Ancestor,
+                ProjectExposureType.Public => relationType is not (DomainRelationType.Ancestor or 
+                                                                  DomainRelationType.InterDomainReferencee),
+                ProjectExposureType.Shared => relationType is not (DomainRelationType.Ancestor or 
+                                                                  DomainRelationType.InterDomainReferencee),
                 _ => false
             },
             ProjectExposureType.Sandbox => target switch
             {
-                ProjectExposureType.Internal => relationType is DomainRelationType.IntraDomainSibling or
-                                                                DomainRelationType.Descendent,
+                ProjectExposureType.Internal => relationType is DomainRelationType.IntraDomainSibling,
                 ProjectExposureType.Public => relationType is DomainRelationType.IntraDomainSibling or
-                                                              DomainRelationType.Descendent,
+                                                              DomainRelationType.Descendent or 
+                                                              DomainRelationType.InterDomainReferencer,
                 ProjectExposureType.Shared => relationType is DomainRelationType.IntraDomainSibling or
-                                                              DomainRelationType.Descendent,
+                                                              DomainRelationType.Descendent or 
+                                                              DomainRelationType.InterDomainReferencer,
                 _ => false
             },
             _ => false
