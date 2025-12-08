@@ -1,6 +1,6 @@
 ﻿using BrothTech.Shared.Contracts.Results;
 
-namespace BrothTech.Cli.Shared.CliCommands;
+namespace BrothTech.Cli.Shared.Contracts.Commands;
 
 public interface ICliCommandHandler<TCommand, TCommandResult> :
     ICliCommandHandler

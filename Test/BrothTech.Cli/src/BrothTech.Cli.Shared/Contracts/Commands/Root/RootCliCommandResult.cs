@@ -1,4 +1,4 @@
-﻿namespace BrothTech.Cli.Shared.CliCommands.Root;
+﻿namespace BrothTech.Cli.Shared.Contracts.Commands.Root;
 
 public class RootCliCommandResult : 
     CliCommandResult<RootCliCommand>;

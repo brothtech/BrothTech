@@ -1,6 +1,6 @@
 ﻿using System.CommandLine;
 
-namespace BrothTech.Cli.Shared.CliCommands;
+namespace BrothTech.Cli.Shared.Contracts.Commands;
 
 public interface ICliCommand
 {

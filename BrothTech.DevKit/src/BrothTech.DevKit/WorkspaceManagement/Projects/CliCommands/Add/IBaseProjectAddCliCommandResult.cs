@@ -1,12 +1,11 @@
-﻿using BrothTech.Cli.Shared.CliCommands;
-using BrothTech.DevKit.Infrastructure.DotNet;
+﻿using BrothTech.DevKit.Infrastructure.DotNet;
 using BrothTech.DevKit.WorkspaceManagement.Services;
 using System.Diagnostics.CodeAnalysis;
 
 namespace BrothTech.DevKit.WorkspaceManagement.Projects.CliCommands.Add;
 
 public interface IBaseProjectAddCliCommandResult<TCommand> :
-    ICliCommandResult<TCommand>
+    IHaveWorkspacePathOptionResult<TCommand>
     where TCommand : class, IBaseProjectAddCliCommand, new()
 {
     string Name
@@ -20,12 +19,6 @@ public interface IBaseProjectAddCliCommandResult<TCommand> :
     {
         get => ParseResult.GetRequiredValue(Command.ExposureType);
         set => ParseResult.SetValue(Command.ExposureType, value ?? throw new ArgumentNullException(nameof(value)));
-    }
-
-    string? WorkspacePath
-    {
-        get => ParseResult.GetValue(Command.WorkspacePath);
-        set => ParseResult.SetValue(Command.WorkspacePath, value.EnsureNotNull());
     }
 
     DotNetProjectTemplate? Template

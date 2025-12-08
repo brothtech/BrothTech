@@ -1,5 +1,5 @@
-﻿using BrothTech.Internal.Infrastructure.FileSystem;
-using BrothTech.Shared.Contracts.FileSystem;
+﻿using BrothTech.Internal.Infrastructure.Services;
+using BrothTech.Shared.Contracts.Services;
 using BrothTech.Shared.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,7 +8,7 @@ namespace BrothTech.Internal.Infrastructure.DependencyInjection;
 public class BrothTechServiceRegistration :
     DomainServicesRegistration
 {
-    protected override Type MarkerType => typeof(BrothTechMarker);
+    protected override Type MarkerType => typeof(BrothTechInternalMarker);
 
     protected override bool ShouldRegisterScannedService(
         Type type)

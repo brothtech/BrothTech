@@ -6,23 +6,21 @@ using System.CommandLine;
 namespace BrothTech.DevKit.WorkspaceManagement.Projects.CliCommands.Add;
 
 public interface IBaseProjectAddCliCommand :
-    ICliCommand
+    IHaveWorkspacePathOption
 {
     Argument<string> Name => GetOrCreateArgument<string>(nameof(Name));
 
     Argument<ProjectExposureType> ExposureType => GetOrCreateArgument<ProjectExposureType>(nameof(ExposureType));
 
-    Option<string> WorkspacePath => GetOrCreateOption<string>($"--{nameof(WorkspacePath)}", "-w", "--workspace");
-
     Option<DotNetProjectTemplate> Template => GetOrCreateOption<DotNetProjectTemplate>($"--{nameof(Template)}", "-t", "--template");
 
     Option<string> FullyQualifiedName => GetOrCreateOption<string>($"--{nameof(FullyQualifiedName)}", "-qn", "--qualifiedname");
 
-    void Add()
+    new void Add()
     {
+        ((IHaveWorkspacePathOption)this).Add();
         AddArgument(Name);
         AddArgument(ExposureType);
-        AddOption(WorkspacePath);
         AddOption(Template);
         AddOption(FullyQualifiedName);
     }

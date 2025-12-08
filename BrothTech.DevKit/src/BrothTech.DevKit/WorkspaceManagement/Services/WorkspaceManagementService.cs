@@ -61,9 +61,13 @@ public class ProjectInfo
 
     public required ProjectExposureType ExposureType { get; set; }
 
+    public PackageInfo[] PackageReferences { get; set; } = [];
+
     [JsonIgnore]
     public DomainInfo? Domain { get; set; }
 }
+
+public record PackageInfo(string Name, string Version);
 
 public enum ProjectExposureType
 {

@@ -1,7 +1,6 @@
-﻿using System;
-using System.CommandLine;
+﻿using System.CommandLine;
 
-namespace BrothTech.Cli.Shared.CliCommands;
+namespace BrothTech.Cli.Shared.Contracts.Commands;
 
 public class MutableParseResult(
     ParseResult parseResult)

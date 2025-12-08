@@ -1,4 +1,4 @@
-﻿using BrothTech.Cli.Shared.Contracts;
+﻿using BrothTech.Cli.Shared.Contracts.Commands;
 using BrothTech.Shared.Contracts.Results;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;

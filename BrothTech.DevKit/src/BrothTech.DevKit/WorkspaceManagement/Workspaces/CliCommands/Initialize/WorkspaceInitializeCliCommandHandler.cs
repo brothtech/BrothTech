@@ -4,6 +4,7 @@ using BrothTech.DevKit.Infrastructure.DotNet;
 using BrothTech.DevKit.Infrastructure.Files;
 using BrothTech.DevKit.WorkspaceManagement.Domains.CliCommands;
 using BrothTech.DevKit.WorkspaceManagement.Domains.CliCommands.Add;
+using BrothTech.DevKit.WorkspaceManagement.Projects.CliCommands.Add;
 using BrothTech.DevKit.WorkspaceManagement.Services;
 using BrothTech.DevKit.WorkspaceManagement.Workspaces.Services;
 using BrothTech.Infrastructure.DependencyInjection;
@@ -57,7 +58,7 @@ public class WorkspaceInitializeCliCommandHandler(
 
         if (commandResult.WorkspacePath.IsNullOrWhiteSpace() is false)
         {
-            yield return $"--{nameof(IBaseDomainAddCliCommand.WorkspacePath)}";
+            yield return $"--{nameof(IHaveWorkspacePathOption.WorkspacePath)}";
             yield return commandResult.WorkspacePath;
         }
 

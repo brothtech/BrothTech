@@ -1,0 +1,8 @@
+workspace init BrothTech Public --workspace C:\Users\Ben\source\repos\brothtech\BrothTech\Test --template ClassLib --addinternal --addshared --addsandbox
+project add-package BrothTech Shared Microsoft.Extensions.Caching.Memory 10.0.0 --workspace C:\Users\Ben\source\repos\brothtech\BrothTech\Test 
+project add-package BrothTech Shared Microsoft.Extensions.DependencyInjection 10.0.0 --workspace C:\Users\Ben\source\repos\brothtech\BrothTech\Test 
+project add-package BrothTech Shared Microsoft.Extensions.Logging 10.0.0 --workspace C:\Users\Ben\source\repos\brothtech\BrothTech\Test 
+project add-package BrothTech Shared Microsoft.Extensions.Logging.Console 10.0.0 --workspace C:\Users\Ben\source\repos\brothtech\BrothTech\Test 
+domain add Cli Public --workspace C:\Users\Ben\source\repos\brothtech\BrothTech\Test --template Console --parent BrothTech --addinternal --addshared
+project add-package Cli Shared System.CommandLine 2.0.0 --workspace C:\Users\Ben\source\repos\brothtech\BrothTech\Test 
+domain add WorkspaceManagement Public --workspace C:\Users\Ben\source\repos\brothtech\BrothTech\Test --template ClassLib --parent BrothTech --addinternal --addshared --addsandbox

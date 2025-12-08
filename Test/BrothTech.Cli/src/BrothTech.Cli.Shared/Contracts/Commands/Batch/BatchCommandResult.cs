@@ -1,7 +1,7 @@
-﻿namespace BrothTech.Cli.Shared.CliCommands.Batch;
+﻿namespace BrothTech.Cli.Shared.Contracts.Commands.Batch;
 
-public class BatchCliCommandResult :
-    CliCommandResult<BatchCliCommand>
+public class BatchCommandResult :
+    CliCommandResult<BatchCommand>
 {
     public string? BatchSourcePath
     {

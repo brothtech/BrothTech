@@ -1,10 +1,10 @@
-﻿using BrothTech.Shared.Contracts.FileSystem;
-using BrothTech.Shared.Contracts.Results;
+﻿using BrothTech.Shared.Contracts.Results;
+using BrothTech.Shared.Contracts.Services;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 
-namespace BrothTech.Internal.Infrastructure.FileSystem;
+namespace BrothTech.Internal.Infrastructure.Services;
 
 public class FileSystemService :
     IFileSystemService

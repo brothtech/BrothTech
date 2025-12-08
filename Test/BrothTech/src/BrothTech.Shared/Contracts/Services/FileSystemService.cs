@@ -1,6 +1,6 @@
 ﻿using BrothTech.Shared.Contracts.Results;
 
-namespace BrothTech.Shared.Contracts.FileSystem;
+namespace BrothTech.Shared.Contracts.Services;
 
 public interface IFileSystemService
 {

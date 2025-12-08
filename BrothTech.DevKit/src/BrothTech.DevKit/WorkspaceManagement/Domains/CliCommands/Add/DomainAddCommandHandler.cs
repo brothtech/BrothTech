@@ -139,7 +139,7 @@ public class DomainAddCliCommandHandler(
 
         if (commandResult.WorkspacePath.IsNullOrWhiteSpace() is false)
         {
-            yield return $"--{nameof(IBaseProjectAddCliCommand.WorkspacePath)}";
+            yield return $"--{nameof(IHaveWorkspacePathOption.WorkspacePath)}";
             yield return commandResult.WorkspacePath;
         }
 

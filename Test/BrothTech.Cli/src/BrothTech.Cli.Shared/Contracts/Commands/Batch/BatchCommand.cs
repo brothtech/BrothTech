@@ -1,17 +1,16 @@
-﻿using System;
-using System.CommandLine;
+﻿using System.CommandLine;
 
-namespace BrothTech.Cli.Shared.CliCommands.Batch;
+namespace BrothTech.Cli.Shared.Contracts.Commands.Batch;
 
-public class BatchCliCommand :
+public class BatchCommand :
     CliCommand
 {
     public Option<string> BatchSourcePath => GetOrCreateOption<string>(nameof(BatchSourcePath), "-s", "--source-path");
 
     public Option<string[]> Batches => GetOrCreateOption<string[]>(nameof(Batches), "-b", "--batches");
 
-    public BatchCliCommand() :
-        base(nameof(BatchCliCommand))
+    public BatchCommand() :
+        base(nameof(BatchCommand))
     {
         AddOption(BatchSourcePath);
         AddOption(Batches);

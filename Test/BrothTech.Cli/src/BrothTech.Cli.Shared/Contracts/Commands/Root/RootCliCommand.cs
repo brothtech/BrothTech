@@ -1,6 +1,6 @@
 ﻿using System.CommandLine;
 
-namespace BrothTech.Cli.Shared.CliCommands.Root;
+namespace BrothTech.Cli.Shared.Contracts.Commands.Root;
 
 public class RootCliCommand() : 
     CliCommand(new RootCommand());

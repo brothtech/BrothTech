@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "batch -s C:\\Users\\Ben\\source\\repos\\brothtech\\BrothTech\\batches"
+    }
+  }
+}

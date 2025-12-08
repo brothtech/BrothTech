@@ -1,6 +1,6 @@
 ﻿using BrothTech.Shared.Contracts.Results;
 
-namespace BrothTech.Cli.Shared.Contracts;
+namespace BrothTech.Cli.Shared.Contracts.Commands;
 
 public interface ICliCommandInvoker
 {

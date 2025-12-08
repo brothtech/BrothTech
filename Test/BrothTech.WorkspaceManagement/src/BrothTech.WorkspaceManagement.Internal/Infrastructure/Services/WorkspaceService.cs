@@ -1,43 +1,69 @@
-﻿using BrothTech.Contracts.Results;
-using BrothTech.DevKit.Infrastructure.Files;
-using BrothTech.DevKit.WorkspaceManagement.Services;
+﻿using BrothTech.Shared.Contracts.Results;
+using BrothTech.Shared.Contracts.Services;
+using BrothTech.WorkspaceManagement.Shared.Contracts.Services;
+using BrothTech.WorkspaceManagement.Shared.Contracts.Workspaces;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace BrothTech.DevKit.WorkspaceManagement.Workspaces.Services;
+namespace BrothTech.WorkspaceManagement.Internal.Infrastructure.Services;
 
-public interface IWorkspaceInfoService
-{
-    Result TryCreateWorkspaceInfo(
-        string workspacePath,
-        string workspaceName);
-
-    Result TryAddDomainInfo(
-        string workspacePath,
-        DomainInfo domain);
-
-    Result TryAddProjectInfo(
-        string workspacePath,
-        string domainName,
-        ProjectInfo project);
-
-    Result TryAddPackageInfo(
-        string workspacePath,
-        string domainName,
-        string projectName,
-        PackageInfo package);
-
-    Result<WorkspaceInfo> TryGetWorkspaceInfo(
-        string workspacePath);
-}
-
-public class WorkspaceInfoService(
+public class WorkspaceService(
     IMemoryCache memoryCache,
     IFileSystemService fileSystemService) :
-    IWorkspaceInfoService
+    IWorkspaceService
 {
     private readonly IMemoryCache _memoryCache = memoryCache.EnsureNotNull();
     private readonly IFileSystemService _fileSystemService = fileSystemService.EnsureNotNull();
     
+    public Result<string> TryGetWorkspaceDirectory()
+    {
+        if (_fileSystemService.TryFindFile(".workspace").HasFailed(out var file, out var messages))
+            return ErrorResult.FromMessages([.. messages]);
+
+        if (file?.Directory?.FullName is null)
+            return ErrorResult.FromErrorMessages("Unexpected error finding root directory.");
+
+        return file.Directory.FullName;
+    }
+
+    public string GetDomainDirectory(
+        string workspacePath,
+        DomainInfo domain)
+    {
+        return @$"{workspacePath}\{domain.FullyQualifiedName}";
+    }
+
+    public string GetDomainPath(
+        string workspacePath,
+        DomainInfo domain)
+    {
+        var domainDirectory = GetDomainDirectory(workspacePath, domain);
+        return @$"{domainDirectory}\{domain.FullyQualifiedName}.sln";
+    }
+
+    public string GetProjectDirectory(
+        string workspacePath,
+        ProjectInfo project)
+    {
+        var domain = project.Domain.EnsureNotNull();
+        var domainDirectory = GetDomainDirectory(workspacePath, domain);
+        if (domain.Name == project.Name)
+            return @$"{domainDirectory}\src\{domain.FullyQualifiedName}";
+
+        return @$"{domainDirectory}\src\{domain.FullyQualifiedName}.{project.Name}";
+    }
+
+    public string GetProjectPath(
+        string workspacePath,
+        ProjectInfo project)
+    {
+        var domain = project.Domain.EnsureNotNull();
+        var projectDirectory = GetProjectDirectory(workspacePath, project);
+        if (domain.Name == project.Name)
+            return @$"{projectDirectory}\{domain.Name}.csproj";
+
+        return @$"{projectDirectory}\{domain.Name}.{project.Name}.csproj";
+    }
+
     public Result TryCreateWorkspaceInfo(
         string workspacePath,
         string workspaceName)

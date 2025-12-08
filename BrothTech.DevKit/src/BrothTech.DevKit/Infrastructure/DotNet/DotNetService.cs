@@ -32,6 +32,12 @@ public interface IDotNetService
         string referencePath,
         CancellationToken token);
 
+    Task<Result> TryAddPackageReference(
+        string projectPath,
+        string packageName,
+        string packageVersion,
+        CancellationToken token);
+
     Task<Result> TrySetPropertiesAsync(
         string projectPath,
         CancellationToken token,
@@ -112,6 +118,22 @@ public class DotNetService(
             projectPath,
             "reference",
             referencePath);
+    }
+
+    public Task<Result> TryAddPackageReference(
+        string projectPath,
+        string packageName,
+        string packageVersion,
+        CancellationToken token)
+    {
+        return _processRunner.TryRunAsync(
+            fileName: "dotnet",
+            token: token,
+            "package",
+            "add",
+            $"{packageName}@{packageVersion}",
+            "--project",
+            projectPath);
     }
 
     public async Task<Result> TrySetPropertiesAsync(
