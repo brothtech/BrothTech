@@ -1,5 +1,5 @@
 ﻿using BrothTech.Cli.Internal.Commands;
-using BrothTech.Cli.Shared.CliCommands;
+using BrothTech.Cli.Shared;
 using BrothTech.Cli.Shared.Contracts.Commands;
 using BrothTech.Shared.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,13 +14,15 @@ public class BrothTechCliServiceRegistration :
     protected override bool ShouldRegisterScannedService(
         Type type)
     {
-        return type.IsAssignableTo(typeof(ICliCommandHandler)) ||
-               type.IsAssignableTo(typeof(ICliCommandBuilder));
+        return type.IsAssignableTo(typeof(ICliCommandBuilder)) ||
+               type.IsAssignableTo(typeof(ICliRequestHandler)) ||
+               type.IsAssignableTo(typeof(ICliRequestValidator));
     }
 
     protected override void RegisterAdditionalServices(
         IServiceCollection serviceCollection)
     {
         serviceCollection.AddSingleton<ICliCommandInvoker, CliCommandInvoker>();
+        serviceCollection.AddSingleton<ICliRequestInvoker, CliRequestInvoker>();
     }
 }

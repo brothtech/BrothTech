@@ -32,7 +32,7 @@ public class ProjectAddCliCommandHandler(
         var (workspace, project) = (null as WorkspaceInfo, null as ProjectInfo);
         return TryGetWorkspacePath(commandResult).OutWithItem(out var workspacePath) &&
                _workspaceInfoService.TryGetWorkspaceInfo(workspacePath).OutWithItem(out workspace) &&
-               TryCreateProjectInfo(commandResult, workspacePath).OutWithItem(out project) &&
+               TryCreateProjectInfo(commandResult, workspacePath, workspace.EnsureNotNull()).OutWithItem(out project) &&
                await TryCreateProjectAsync(commandResult, workspacePath, workspace.EnsureNotNull(), project.EnsureNotNull(), token) &&
                await TryAddToRootAndDomainSolution(workspacePath, workspace.EnsureNotNull(), project.EnsureNotNull(), token) &&
                await TryAddProjectReferencesAsync(workspacePath, workspace.EnsureNotNull(), project.EnsureNotNull(), token);
@@ -52,13 +52,18 @@ public class ProjectAddCliCommandHandler(
 
     private Result<ProjectInfo> TryCreateProjectInfo(
         IProjectAddCliCommandResult commandResult,
-        string workspacePath)
+        string workspacePath,
+        WorkspaceInfo workspace)
     {
         commandResult.DomainName = commandResult.DomainName ?? commandResult.Name;
+        var domain = workspace.Domains.First(x => x.Name == commandResult.DomainName);
         var project = new ProjectInfo
         {
             DomainName = commandResult.DomainName,
             Name = commandResult.Name,
+            AssemblyName = domain.Name != commandResult.Name ?
+                $"{domain.FullyQualifiedName}.{commandResult.Name}" :
+                domain.FullyQualifiedName,
             ExposureType = commandResult.ExposureType.Value
         };
         var result = _workspaceInfoService.TryAddProjectInfo(workspacePath, commandResult.DomainName, project);
@@ -231,22 +236,27 @@ public class ProjectAddCliCommandHandler(
         var targetProjectPath = GetProjectPath(workspacePath, targetProject);
 
         var aggregateResult = Result.Success;
-        if (ShouldAddProjectFromReferencedDomain(project, targetProject) ||
-            project.ExposureType.CanDependOn(targetProject.ExposureType, relationType))
-            aggregateResult &= await _dotNetService.TryAddProjectReference(projectPath, targetProjectPath, token);
+        if (project.ExposureType.CanDependOn(targetProject.ExposureType, relationType))
+            aggregateResult &= await TryAddProjectReferenceAsync(project, targetProject, projectPath, targetProjectPath, token);
 
         if (aggregateResult.IsSuccessful && project.ExposureType.IsVisibleTo(targetProject.ExposureType, relationType))
-            aggregateResult &= await _dotNetService.TryAddProjectReference(targetProjectPath, projectPath, token);
+            aggregateResult &= await TryAddProjectReferenceAsync(targetProject, project, targetProjectPath, projectPath, token);
 
         return aggregateResult;
     }
 
-    private bool ShouldAddProjectFromReferencedDomain(
+    private async Task<Result> TryAddProjectReferenceAsync(
         ProjectInfo project,
-        ProjectInfo targetProject)
+        ProjectInfo targetProject,
+        string projectPath,
+        string targetProjectPath,
+        CancellationToken token)
     {
-        return project.Domain?.DomainReferences.Any(x => x == targetProject.DomainName) is true &&
-               targetProject.ExposureType is not ProjectExposureType.Internal;
+        var result = await _dotNetService.TryAddProjectReferenceAsync(projectPath, targetProjectPath, token);
+        if (project.ExposureType is not ProjectExposureType.Internal)
+            return result;
+
+        return result && await _dotNetService.TryAddInternalVisiblityAsync(projectPath, targetProject.AssemblyName, token);
     }
 
     private string GetSolutionDirectory(

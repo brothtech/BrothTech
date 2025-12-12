@@ -61,6 +61,8 @@ public class ProjectInfo
 
     public required string Name { get; set; }
 
+    public required string AssemblyName { get; set; }
+
     public required ProjectExposureType ExposureType { get; set; }
 
     public PackageInfo[] PackageReferences { get; set; } = [];

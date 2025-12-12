@@ -2,5 +2,5 @@
 
 namespace BrothTech.Cli.Shared.Contracts.Commands.Root;
 
-public class RootCliCommand() : 
-    CliCommand(new RootCommand());
+public class RootCliCommand() :
+    RootCommand();

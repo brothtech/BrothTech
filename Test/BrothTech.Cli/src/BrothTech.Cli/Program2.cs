@@ -2,10 +2,11 @@
 using BrothTech.Cli.Internal.Commands.Root;
 using BrothTech.Cli.Internal.Infrastructure.DependencyInjection;
 using BrothTech.Infrastructure;
+using BrothTech.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 var entryPoint = new EntryPoint(
-    typeof(BrothTechCliServiceRegistration),
+    typeof(BrothTechServiceRegistration),
     typeof(BrothTechCliServiceRegistration));
 
 return await entryPoint.RunAsync<RootCliCommandBuilder, ILogger<Program>>(async (rootCommandBuilder, logger) =>

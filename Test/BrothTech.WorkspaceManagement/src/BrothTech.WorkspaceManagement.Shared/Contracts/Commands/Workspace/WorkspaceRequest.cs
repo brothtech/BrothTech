@@ -2,5 +2,5 @@
 
 namespace BrothTech.WorkspaceManagement.Shared.Contracts.Commands.Workspace;
 
-public class WorkspaceCliCommandResult :
-    CliCommandResult<WorkspaceCliCommand>;
+public class WorkspaceRequest :
+    ICliRequest<WorkspaceCommand>;

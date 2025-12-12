@@ -1,8 +1,10 @@
 ﻿using BrothTech.Contracts.Results;
 using BrothTech.DevKit.Infrastructure.Files;
 using Microsoft.Extensions.Logging;
+using System.CommandLine.Parsing;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -27,7 +29,7 @@ public interface IDotNetService
         string directory,
         CancellationToken token);
 
-    Task<Result> TryAddProjectReference(
+    Task<Result> TryAddProjectReferenceAsync(
         string projectPath,
         string referencePath,
         CancellationToken token);
@@ -42,6 +44,11 @@ public interface IDotNetService
         string projectPath,
         CancellationToken token,
         params DotNetProjectProperty[] propertyGroups);
+
+    Task<Result> TryAddInternalVisiblityAsync(
+        string projectPath,
+        string assemblyName,
+        CancellationToken token);
 }
 
 public class DotNetService(
@@ -106,7 +113,7 @@ public class DotNetService(
             "net10.0");
     }
 
-    public Task<Result> TryAddProjectReference(
+    public Task<Result> TryAddProjectReferenceAsync(
         string projectPath, 
         string referencePath,
         CancellationToken token)
@@ -141,15 +148,32 @@ public class DotNetService(
         CancellationToken token,
         params DotNetProjectProperty[] propertyGroups)
     {
+        var elements = propertyGroups.Select(x => new XElement(x.Name, x.Value));
+        return await TryUpdateXmlElementAsync(projectPath, x => x.Add([.. elements]), "PropertyGroup", token);
+    }
+
+    public async Task<Result> TryAddInternalVisiblityAsync(
+        string projectPath,
+        string assemblyName,
+        CancellationToken token)
+    {
+        var attribute = new XAttribute("Include", assemblyName);
+        var element = new XElement("InternalsVisibleTo", attribute);
+        return await TryUpdateXmlElementAsync(projectPath, x => x.Add(element), "ItemGroup", token);
+    }
+
+    private async Task<Result> TryUpdateXmlElementAsync(
+        string filePath,
+        Action<XElement> handler,
+        string? targetElementName = null,
+        CancellationToken token = default)
+    {
         try
         {
-            using var stream = File.Open(projectPath, FileMode.Open);
+            using var stream = File.Open(filePath, FileMode.Open);
             var document = await XDocument.LoadAsync(stream, LoadOptions.None, token);
-            var root = document.Root.EnsureNotNull();
-            if (root.Element("PropertyGroup") is not { } propertyGroup)
-                root.Add(propertyGroup = new XElement("PropertyGroup"));
-
-            propertyGroup.Add([.. propertyGroups.Select(x => new XElement(x.Name, x.Value))]);
+            var targetElement = GetOrCreateTargetElement(document, targetElementName);
+            handler(targetElement);
             stream.SetLength(stream.Position = 0);
             await document.SaveAsync(stream, SaveOptions.None, token);
             return Result.Success;
@@ -158,6 +182,20 @@ public class DotNetService(
         {
             return exception;
         }
+    }
+
+    private XElement GetOrCreateTargetElement(
+        XDocument document,
+        string? targetElementName)
+    {
+        var root = document.Root.EnsureNotNull();
+        if (targetElementName.IsNullOrWhiteSpace())
+            return root;
+
+        if (root.Element(targetElementName) is not { } targetElement)
+            root.Add(targetElement = new XElement(targetElementName));
+
+        return targetElement;
     }
 }
 

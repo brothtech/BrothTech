@@ -57,6 +57,7 @@ public class ProjectAddCommandHandler(
         {
             DomainName = domainName,
             Name = commandResult.Name,
+            AssemblyName = "hi",
             ExposureType = commandResult.ExposureType.Value
         };
         var result = _workspaceInfoService.TryAddProjectInfo(workspacePath, domainName, project);
@@ -200,10 +201,10 @@ public class ProjectAddCommandHandler(
 
         var aggregateResult = Result.Success;
         if (project.ExposureType.CanDependOn(targetProject.ExposureType, relationType))
-            aggregateResult &= await _dotNetService.TryAddProjectReference(projectPath, targetProjectPath, token);
+            aggregateResult &= await _dotNetService.TryAddProjectReferenceAsync(projectPath, targetProjectPath, token);
 
         if (aggregateResult.IsSuccessful && project.ExposureType.IsVisibleTo(targetProject.ExposureType, relationType))
-            aggregateResult &= await _dotNetService.TryAddProjectReference(targetProjectPath, projectPath, token);
+            aggregateResult &= await _dotNetService.TryAddProjectReferenceAsync(targetProjectPath, projectPath, token);
 
         return aggregateResult;
     }
