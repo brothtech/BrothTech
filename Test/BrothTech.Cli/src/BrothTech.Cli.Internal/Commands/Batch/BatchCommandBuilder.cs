@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace BrothTech.Cli.Internal.Commands.Batch;
 
 [ServiceDescriptor<ICliCommandBuilder<RootCliCommand>, BatchCommandBuilder>]
-public class BatchCommandBuilder(
+internal class BatchCommandBuilder(
     ILogger<BatchCommandBuilder> logger,
     IEnumerable<ICliCommandBuilder<BatchCommand>> childBuilders,
     ICliRequestInvoker requestInvoker) :

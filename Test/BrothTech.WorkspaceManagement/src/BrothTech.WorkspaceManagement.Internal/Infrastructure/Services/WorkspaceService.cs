@@ -6,7 +6,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace BrothTech.WorkspaceManagement.Internal.Infrastructure.Services;
 
-public class WorkspaceService(
+internal class WorkspaceService(
     IMemoryCache memoryCache,
     IFileSystemService fileSystemService) :
     IWorkspaceService

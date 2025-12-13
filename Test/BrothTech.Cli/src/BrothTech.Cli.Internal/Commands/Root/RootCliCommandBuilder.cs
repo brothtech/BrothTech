@@ -8,7 +8,7 @@ using BrothTech.Cli.Shared;
 namespace BrothTech.Cli.Internal.Commands.Root;
 
 [ServiceDescriptor<RootCliCommandBuilder>]
-public class RootCliCommandBuilder(
+internal class RootCliCommandBuilder(
     ILogger<RootCliCommandBuilder> logger,
     IEnumerable<ICliCommandBuilder<RootCliCommand>> childBuilders,
     ICliRequestInvoker requestInvoker,

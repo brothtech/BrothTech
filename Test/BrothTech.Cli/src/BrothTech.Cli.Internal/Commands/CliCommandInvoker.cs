@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace BrothTech.Cli.Internal.Commands;
 
-public partial class CliCommandInvoker(
+internal partial class CliCommandInvoker(
     ILogger<CliCommandInvoker> logger,
     IMemoryCache memoryCache) :
     ICliCommandInvoker

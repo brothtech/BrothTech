@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 namespace BrothTech.Cli.Internal.Commands.Batch;
 
 [ServiceDescriptor<ICliRequestHandler<BatchCommand, BatchRequest>, BatchRequestHandler>]
-public partial class BatchRequestHandler(
+internal partial class BatchRequestHandler(
     IFileSystemService fileSystemService,
     ICliCommandInvoker commandInvoker) :
     ICliRequestHandler<BatchCommand, BatchRequest>

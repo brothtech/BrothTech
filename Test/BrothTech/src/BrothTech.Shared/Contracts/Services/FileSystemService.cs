@@ -1,4 +1,5 @@
 ﻿using BrothTech.Shared.Contracts.Results;
+using System.Xml.Linq;
 
 namespace BrothTech.Shared.Contracts.Services;
 
@@ -33,4 +34,10 @@ public interface IFileSystemService
     Result TryWriteFile<T>(
         string path,
         T value);
+
+    Task<Result> TryUpdateXmlElementAsync(
+        string filePath,
+        Action<XElement> handler,
+        string? elementPath = null,
+        CancellationToken token = default);
 }

@@ -1,15 +1,15 @@
 ﻿using BrothTech.Cli.Internal.Commands;
-using BrothTech.Cli.Shared;
+using BrothTech.Cli.Internal.Infrastructure.DependencyInjection;
 using BrothTech.Cli.Shared.Contracts.Commands;
 using BrothTech.Shared.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BrothTech.Cli.Internal.Infrastructure.DependencyInjection;
+namespace BrothTech.Cli.Infrastructure.DependencyInjection;
 
-public class BrothTechCliServiceRegistration :
+public class CliServiceRegistration :
     DomainServicesRegistration
 {
-    protected override Type MarkerType => typeof(BrothTechCliInternalMarker);
+    protected override Type MarkerType => typeof(CliInternalMarker);
 
     protected override bool ShouldRegisterScannedService(
         Type type)

@@ -9,15 +9,6 @@ using System.Reflection;
 
 namespace BrothTech.Cli.Shared;
 
-public interface ICliCommandBuilder<TParentCommand> :
-    ICliCommandBuilder
-    where TParentCommand : Command, new();
-
-public interface ICliCommandBuilder
-{
-    Result<Command> TryBuild();
-}
-
 public abstract class CliCommandBuilder<TParentCommand, TCommand, TRequest>(
     ILogger logger,
     IEnumerable<ICliCommandBuilder<TCommand>> childBuilders,
@@ -79,7 +70,7 @@ public abstract class CliCommandBuilder<TParentCommand, TCommand, TRequest>(
         foreach (var message in result.Messages)
             _logger.Log(message.LogLevel, message.Message, message.Args);
     }
-    
+
     private Result<TRequest> TryBuildRequest(
         ParseResult parseResult)
     {
@@ -94,7 +85,7 @@ public abstract class CliCommandBuilder<TParentCommand, TCommand, TRequest>(
 
             property.SetValue(request, value);
         }
-            
+
         return request;
     }
 }

@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace BrothTech.Internal.Infrastructure.Services;
 
-public class ProcessRunner :
+internal class ProcessRunner :
     IProcessRunner
 {
     public async Task<Result> TryRunAsync(

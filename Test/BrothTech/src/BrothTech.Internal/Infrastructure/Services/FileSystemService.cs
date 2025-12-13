@@ -3,10 +3,11 @@ using BrothTech.Shared.Contracts.Services;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
+using System.Xml.Linq;
 
 namespace BrothTech.Internal.Infrastructure.Services;
 
-public class FileSystemService :
+internal class FileSystemService :
     IFileSystemService
 {
     private static readonly Lazy<JsonSerializerOptions> _jsonSerializerOptions = new(() => new() { WriteIndented = true });
@@ -119,6 +120,44 @@ public class FileSystemService :
         }
     }
 
+    public async Task<Result> TryUpdateXmlElementAsync(
+        string filePath,
+        Action<XElement> handler,
+        string? elementPath = null,
+        CancellationToken token = default)
+    {
+        try
+        {
+            using var stream = OpenReadWriteStream(filePath, FileMode.Open);
+            var document = await LoadXmlDocumentAsync(stream, LoadOptions.None, token);
+            var targetElement = GetOrCreateTargetElement(document, elementPath);
+            handler(targetElement);
+            stream.SetLength(stream.Position = 0);
+            await document.SaveAsync(stream, SaveOptions.None, token);
+            return Result.Success;
+        }
+        catch (Exception exception)
+        {
+            return exception;
+        }
+    }
+
+    private XElement GetOrCreateTargetElement(
+        XDocument document,
+        string? elementPath)
+    {
+        var root = document.Root.EnsureNotNull();
+        if (elementPath.IsNullOrWhiteSpace())
+            return root;
+
+        var elementPathNodes = elementPath.Split('.');
+        var targetElement = root.Element(elementPathNodes[0]).EnsureNotNull();
+        foreach (var elementPathNode in elementPathNodes.Skip(1))
+            targetElement = targetElement.Element(elementPathNode).EnsureNotNull();
+
+        return targetElement;
+    }
+
     [ExcludeFromCodeCoverage(Justification = Passthrough)]
     internal string GetCurrentDirectory()
     {
@@ -170,6 +209,14 @@ public class FileSystemService :
     }
 
     [ExcludeFromCodeCoverage(Justification = Passthrough)]
+    internal FileStream OpenReadWriteStream(
+        string path,
+        FileMode fileMode)
+    {
+        return File.Open(path, fileMode);
+    }
+
+    [ExcludeFromCodeCoverage(Justification = Passthrough)]
     internal T? Deserialize<T>(
         FileStream stream)
     {
@@ -182,5 +229,13 @@ public class FileSystemService :
         T value)
     {
         JsonSerializer.Serialize(stream, value, _jsonSerializerOptions.Value);
+    }
+
+    internal async Task<XDocument> LoadXmlDocumentAsync(
+        Stream stream,
+        LoadOptions loadOptions,
+        CancellationToken cancellationToken)
+    {
+        return await XDocument.LoadAsync(stream, loadOptions, cancellationToken);
     }
 }

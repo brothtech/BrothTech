@@ -1,3 +1,3 @@
 ﻿namespace BrothTech.Internal.Infrastructure.DependencyInjection;
 
-public class BrothTechInternalMarker;
+internal class BrothTechInternalMarker;

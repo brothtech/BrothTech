@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace BrothTech.Cli.Internal.Commands;
 
-public partial class CliRequestInvoker(
+internal partial class CliRequestInvoker(
     ILogger<CliRequestInvoker> logger,
     IServiceScopeFactory scopeFactory) :
     ICliRequestInvoker

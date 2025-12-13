@@ -234,29 +234,50 @@ public class ProjectAddCliCommandHandler(
     {
         var projectPath = GetProjectPath(workspacePath, project);
         var targetProjectPath = GetProjectPath(workspacePath, targetProject);
+        return await TryAddProjectDependencyAsync(project, projectPath, targetProject, targetProjectPath, relationType, token) &&
+               await TryAddTargetProjectDependencyAsync(project, projectPath, targetProject, targetProjectPath, relationType, token);
+    }
 
-        var aggregateResult = Result.Success;
-        if (project.ExposureType.CanDependOn(targetProject.ExposureType, relationType))
-            aggregateResult &= await TryAddProjectReferenceAsync(project, targetProject, projectPath, targetProjectPath, token);
+    private async Task<Result> TryAddProjectDependencyAsync(
+        ProjectInfo project,
+        string projectPath,
+        ProjectInfo targetProject,
+        string targetProjectPath,
+        DomainRelationType relationType,
+        CancellationToken token)
+    {
+        if (project.ExposureType.CanDependOn(targetProject.ExposureType, relationType) is false)
+            return Result.Success;
 
-        if (aggregateResult.IsSuccessful && project.ExposureType.IsVisibleTo(targetProject.ExposureType, relationType))
-            aggregateResult &= await TryAddProjectReferenceAsync(targetProject, project, targetProjectPath, projectPath, token);
+        return await TryAddProjectReferenceAsync(project, projectPath, targetProject, targetProjectPath, token);
+    }
 
-        return aggregateResult;
+    private async Task<Result> TryAddTargetProjectDependencyAsync(
+        ProjectInfo project,
+        string projectPath,
+        ProjectInfo targetProject,
+        string targetProjectPath,
+        DomainRelationType relationType,
+        CancellationToken token)
+    {
+        if (project.ExposureType.IsVisibleTo(targetProject.ExposureType, relationType) is false)
+            return Result.Success;
+
+        return await TryAddProjectReferenceAsync(targetProject, targetProjectPath, project, projectPath, token);
     }
 
     private async Task<Result> TryAddProjectReferenceAsync(
         ProjectInfo project,
-        ProjectInfo targetProject,
         string projectPath,
+        ProjectInfo targetProject,
         string targetProjectPath,
         CancellationToken token)
     {
         var result = await _dotNetService.TryAddProjectReferenceAsync(projectPath, targetProjectPath, token);
-        if (project.ExposureType is not ProjectExposureType.Internal)
+        if (result.IsSuccessful is false || targetProject.ExposureType is not ProjectExposureType.Internal)
             return result;
 
-        return result && await _dotNetService.TryAddInternalVisiblityAsync(projectPath, targetProject.AssemblyName, token);
+        return await _dotNetService.TryAddInternalVisiblityAsync(targetProjectPath, project.AssemblyName, token);
     }
 
     private string GetSolutionDirectory(
