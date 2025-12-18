@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BrothTech.WorkspaceManagement.Infrastructure.DependencyInjection;
 
-public class BrothTechCliServiceRegistration :
+public class WorkspaceManagementServiceRegistration :
     DomainServicesRegistration
 {
     protected override Type MarkerType => typeof(WorkspaceManagementMarker);

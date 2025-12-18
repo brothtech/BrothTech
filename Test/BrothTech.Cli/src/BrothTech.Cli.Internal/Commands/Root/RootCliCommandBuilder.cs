@@ -7,7 +7,7 @@ using BrothTech.Cli.Shared;
 
 namespace BrothTech.Cli.Internal.Commands.Root;
 
-[ServiceDescriptor<RootCliCommandBuilder>]
+[ServiceDescriptor<IRootCliCommandBuilder, RootCliCommandBuilder>]
 internal class RootCliCommandBuilder(
     ILogger<RootCliCommandBuilder> logger,
     IEnumerable<ICliCommandBuilder<RootCliCommand>> childBuilders,
@@ -16,7 +16,8 @@ internal class RootCliCommandBuilder(
     CliCommandBuilder<RootCliCommand, RootCliCommand, RootCliRequest>(
         logger, 
         childBuilders, 
-        requestInvoker)
+        requestInvoker),
+    IRootCliCommandBuilder
 {
     private readonly IMemoryCache _memoryCache = memoryCache.EnsureNotNull();
 

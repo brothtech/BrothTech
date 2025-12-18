@@ -138,7 +138,7 @@ public static class ProjectExposureTypeExtentions
         {
             ProjectExposureType.Internal => target switch
             {
-                ProjectExposureType.Shared => relationType is not DomainRelationType.Descendent or 
+                ProjectExposureType.Shared => relationType is not DomainRelationType.Ancestor or 
                                                                   DomainRelationType.InterDomainReferencee,
                 ProjectExposureType.Public => relationType is DomainRelationType.Descendent or
                                                               DomainRelationType.InterDomainReferencer,

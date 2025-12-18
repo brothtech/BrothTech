@@ -1,6 +1,5 @@
 ﻿using BrothTech;
 using BrothTech.Cli.Shared.Contracts.Commands;
-using BrothTech.Cli.Shared.Contracts.Commands.Members;
 using BrothTech.Shared;
 using BrothTech.Shared.Contracts.Results;
 using Microsoft.Extensions.Logging;
@@ -44,11 +43,8 @@ public abstract class CliCommandBuilder<TParentCommand, TCommand, TRequest>(
         if (addChildrenRresult.HasFailed(out _, out var messages))
             return ErrorResult.FromMessages(messages);
 
-        foreach (var member in typeof(TCommand).GetCustomAttributes<CliCommandMemberAttribute>(inherit: true))
-            if (member is CliArgumentAttribute argumentAttribute)
-                command.Add(argumentAttribute.Argument);
-            else if (member is CliOptionAttribute optionAttribute)
-                command.Add(optionAttribute.Option);
+        foreach (var attribute in typeof(TCommand).GetCustomAttributes<CliCommandMembersAttribute>(inherit: true))
+            attribute.AddCommandMembers(command);
 
         return Result.Success;
     }
@@ -64,6 +60,7 @@ public abstract class CliCommandBuilder<TParentCommand, TCommand, TRequest>(
     {
         var result = TryBuildRequest(parseResult).OutWithItem(out var request) &&
                      await _requestInvoker.TryInvokeAsync<TCommand, TRequest>(request, token);
+
         if (result.IsSuccessful)
             return;
 
@@ -75,16 +72,9 @@ public abstract class CliCommandBuilder<TParentCommand, TCommand, TRequest>(
         ParseResult parseResult)
     {
         var request = new TRequest();
-        foreach (var property in typeof(TRequest).GetProperties())
-        {
-            if (property.GetCustomAttribute<CliCommandMemberAttribute>(inherit: true) is not { } member)
-                continue;
-
-            if (member.TryGetValue(parseResult).HasItem(out var value, out var messages) is false)
-                return ErrorResult.FromMessages(messages);
-
-            property.SetValue(request, value);
-        }
+        var attributes = typeof(TCommand).GetCustomAttributes<CliCommandMembersAttribute>(inherit: true);
+        if (attributes.AggregateResults(x => x.TryBindMemberValues(parseResult, request)).HasFailed(out _, out var messages))
+            return ErrorResult.FromMessages(messages);
 
         return request;
     }

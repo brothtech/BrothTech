@@ -1,9 +1,8 @@
-﻿using BrothTech.Cli.Shared.Contracts.Commands.Batch.Members;
-using System.CommandLine;
+﻿using System.CommandLine;
 
 namespace BrothTech.Cli.Shared.Contracts.Commands.Batch;
 
-[BatchSourcePathOption, BatchesOption]
+[BatchCommandMembers]
 public class BatchCommand :
     Command
 {

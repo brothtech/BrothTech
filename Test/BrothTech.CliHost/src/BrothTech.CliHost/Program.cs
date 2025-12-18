@@ -1,15 +1,17 @@
 ﻿using BrothTech;
-using BrothTech.Cli.Internal.Commands.Root;
-using BrothTech.Cli.Internal.Infrastructure.DependencyInjection;
+using BrothTech.Cli.Infrastructure.DependencyInjection;
+using BrothTech.Cli.Shared.Contracts.Commands.Root;
 using BrothTech.Infrastructure;
 using BrothTech.Infrastructure.DependencyInjection;
+using BrothTech.WorkspaceManagement.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 var entryPoint = new EntryPoint(
     typeof(BrothTechServiceRegistration),
-    typeof(BrothTechCliServiceRegistration));
+    typeof(CliServiceRegistration),
+    typeof(WorkspaceManagementServiceRegistration));
 
-return await entryPoint.RunAsync<RootCliCommandBuilder, ILogger<Program>>(async (rootCommandBuilder, logger) =>
+return await entryPoint.RunAsync<IRootCliCommandBuilder, ILogger<Program>>(async (rootCommandBuilder, logger) =>
 {
     if (rootCommandBuilder.TryBuild().OutWithNoItem(out var rootCommand, out var messages))
     {
